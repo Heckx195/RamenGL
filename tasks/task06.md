@@ -51,7 +51,7 @@ korret für die gewählte Shadowmap-Size `SHADOW_MAP_SIZE` (definieren Sie
 selbst) korrekt ist.
 
 Nachdem Sie in die shadowmap gerendert haben, wechseln Sie zurück auf
-den default Framebuffer und passen Sie die Viewport-Size an die Fenstergroesse an.
+den default Framebuffer und passen Sie die Viewport-Size an die Fenstergrösse an.
 Das zurückwechseln auf den default Framebuffer erfolgt durch:
 ```cpp
 glBindFramebuffer(GL_FRAMEBUFFER, 0);
