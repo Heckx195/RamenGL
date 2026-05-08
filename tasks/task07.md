@@ -31,7 +31,7 @@ einen `vec3` als Texturkoordinaten an `texture()` übergeben können.
 Dokumentation dazu finden Sie hier: https://wikis.khronos.org/opengl/Sampler_(GLSL)
 
 *Hinweis*: Vergessen Sie nicht, auch die z-Koordinate Ihrer in den
-Normalized Device Space projezierten Position auf [0.0, 1.0] zu mappen.
+Normalized Device Space projizierten Position auf [0.0, 1.0] zu mappen.
 Zur Erinnerung: Ist nichts anderes eingestellt, so befinden sich die
 Koordinaten im NDC für x, y, z im Intervall [-1.0, 1.0].
 
