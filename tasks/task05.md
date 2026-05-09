@@ -65,11 +65,11 @@ darauf, dass sich verrechnete Vektoren im gleichen Koordinatensystem
 befinden!
 
 ## 5.3) FPS Camera
-Ändern Sie aber nun das Verhalten der Cubemap so,
+Ändern Sie nun das Verhalten der Cubemap so,
 dass Sie diese nicht mehr verlassen können! Dies soll den Eindruck
 eines unendlich entfernt liegenden Horizonts simulieren, wie
 es auch in vielen Videospielen der Fall ist.  
-Nutzen Sie die ImGUI Bibliothek, um ein UI Element zu erstellen, dass Sie
+Nutzen Sie die ImGUI Bibliothek, um ein UI Element zu erstellen, das Sie
 zwischen der ursprünglichen Version und dem unendlich weit entfernten
 Horizont umschalten lässt.  
 
