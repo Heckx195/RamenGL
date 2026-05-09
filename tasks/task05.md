@@ -68,13 +68,14 @@ befinden!
 Ändern Sie aber nun das Verhalten der Cubemap so,
 dass Sie diese nicht mehr verlassen können! Dies soll den Eindruck
 eines unendlich entfernt liegenden Horizonts simulieren, wie
-es auch in vielen Videospielen der Fall ist. Nutzen Sie
-die ImGUI Bibliothek, um ein UI Element zu erstellen, dass Sie
+es auch in vielen Videospielen der Fall ist.  
+Nutzen Sie die ImGUI Bibliothek, um ein UI Element zu erstellen, dass Sie
 zwischen der ursprünglichen Version und dem unendlich weit entfernten
-Horizont umschalten lässt.
-*Hineweis*: Sie benötigen die Funktion `glDepthMask()`
-(https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDepthMask.xhtml).
-Auch muss hierfür die Cubemap das Objekt sein, dass Sie rendern.
-Erklären Sie in der Dokumentation warum das so ist. Ergänzen Sie
-die Dokumentation evtl. mit Bildern der Depth-Buffer, die Sie
-aus RenderDoc extrahieren.
+Horizont umschalten lässt.  
+
+Beispielvideo:
+[Cubemapping FPS-mode vs Escape-mode](https://syncandshare.lrz.de/getlink/fiNakx3QXFzQPcTKAQWmja/cubemap-fps-vs-escape-1080p-x264-high_compression.mp4) 
+
+*Hinweis*: Sie benötigen die Funktion `glDepthMask()`
+(https://registry.khronos.org/OpenGL-Refpages/gl4/html/glDepthMask.xhtml).  
+
