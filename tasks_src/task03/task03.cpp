@@ -25,13 +25,19 @@
 #include "../ramen/rgl_shader.h"
 #include "../ramen/rgl_utils.h"
 
+std::vector<Vertex> CreateCube(const Vec3f& color)
+{
+    // placeholder.
+    return std::vector<Vertex>{};
+}
+
 std::vector<Vertex> CreateCylinder(const Vec3f& color)
 {
     // placeholder.
     return std::vector<Vertex>{};
 }
 
-std::vector<Vertex> CreateCube(const Vec3f& color)
+std::vector<Vertex> CreateSphere(const Vec3f& color)
 {
     // placeholder.
     return std::vector<Vertex>{};
