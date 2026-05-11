@@ -25,6 +25,16 @@
 #include "../ramen/rgl_shader.h"
 #include "../ramen/rgl_utils.h"
 
+std::vector<Vertex> CreateCylinder(const Vec3f& color)
+{
+    // placeholder.
+}
+
+std::vector<Vertex> CreateCube(const Vec3f& color)
+{
+    // placeholder.
+}
+
 int main(int argc, char** argv)
 {
     Filesystem* pFS = Filesystem::Init(argc, argv, "assets");
@@ -55,14 +65,21 @@ int main(int argc, char** argv)
     GLuint VAO;
     glCreateVertexArrays(1, &VAO);
     glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(Vertex));
-    /* Position */
+    /* Position */ // Position is at offset 0
     glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
     glEnableVertexArrayAttrib(VAO, 0);
     glVertexArrayAttribBinding(VAO, 0, 0);
-    /* Normal */
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
     glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
     glEnableVertexArrayAttrib(VAO, 1);
     glVertexArrayAttribBinding(VAO, 1, 0);
+    // Aufgabe 3.1) Nutzen der Farbattribute.
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO, 2);
+    glVertexArrayAttribBinding(VAO, 2, 0);
+
+    // Aufgabe 3.2) Erzeugung von Zylinder, Quader, Kugeln
 
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
