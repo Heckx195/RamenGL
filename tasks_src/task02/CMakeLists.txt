@@ -40,6 +40,7 @@ set_target_properties(task02 PROPERTIES
 )
 
 target_include_directories(task02 PUBLIC
+    ../../
     ../../dependencies/glad/include
     ../../dependencies/)
 target_link_libraries(task02
