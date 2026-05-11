@@ -43,7 +43,21 @@ int main(int argc, char** argv)
     }
 
     // TODO: Create vertex layout via VAO.
+    GLuint VAOName;
+    glCreateVertexArrays(1, &VAOName);
+
     // TODO: Create a buffer on GPU and upload the model's vertices.
+    GLuint VBOName;
+    glCreateBuffers(1, &VBOName);
+
+    // Upload vertex data to GPU.
+    glNamedBufferData(VBOName, model.NumVertices() * sizeof(Vertex), model.GetVertices().data(), GL_STATIC_DRAW);
+
+    // Set up vertex attributes. Link the vertex buffer to the VAO and define the vertex format.
+    glVertexArrayVertexBuffer(VAOName, 0, VBOName, 0, sizeof(Vertex));
+    glVertexArrayAttribFormat(VAOName, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glVertexArrayAttribBinding(VAOName, 0, 0);
+    glEnableVertexArrayAttrib(VAOName, 0);
 
     /* Create camera */
     Camera camera(Vec3f{ 0.0f, 0.0f, 20.0f });
@@ -125,12 +139,14 @@ int main(int argc, char** argv)
         shader.Use();
 
         // TODO: Activate VAO.
+        glBindVertexArray(VAOName);
 
         glUniformMatrix4fv(0, 1, GL_FALSE, modelMat.Data());
         glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
 
         // TODO: Draw the model.
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei)model.NumVertices());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
