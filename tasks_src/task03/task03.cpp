@@ -28,11 +28,13 @@
 std::vector<Vertex> CreateCylinder(const Vec3f& color)
 {
     // placeholder.
+    return std::vector<Vertex>{};
 }
 
 std::vector<Vertex> CreateCube(const Vec3f& color)
 {
     // placeholder.
+    return std::vector<Vertex>{};
 }
 
 int main(int argc, char** argv)

@@ -1,10 +1,14 @@
 = Einführung
+```shell
+cmake --build build/
+./build/Debug/task02.exe
+```
 
 == Vertex-Array-Object (VAO)
 Ein VAO speichert den Zustand von Vertex-Attributen und deren Zuordnung zu Vertex-Puffern.
 
 == Vertex-Buffer-Object (VBO)
-Ein VBO speichern Vertex-Daten (wie Positionen, Farben, Texturkoordinaten, Normalen, ...) im Grafikspeicher der GPU. Ermöglichen eine schnelle und wiederholte Nutzung von Vertex-Daten und reduzieren damit die Datenübertragung zwischen CPU und GPU.
+Ein VBO speichert Vertex-Daten (wie Positionen, Farben, Texturkoordinaten, Normalen, ...) im Grafikspeicher der GPU. Ermöglichen eine schnelle und wiederholte Nutzung von Vertex-Daten und reduzieren damit die Datenübertragung zwischen CPU und GPU.
 
 
 = Aufgabe02
