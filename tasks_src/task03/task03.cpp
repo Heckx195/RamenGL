@@ -27,8 +27,67 @@
 
 std::vector<Vertex> CreateCube(const Vec3f& color)
 {
-    // placeholder.
-    return std::vector<Vertex>{};
+    std::vector<Vertex> vertices;
+    
+    // Define the 8 corners of the cube
+        // symmetrisch um den Ursprung.
+    Vec3f corners[8] = {
+        Vec3f{-1.f, -1.f, -1.f},
+        Vec3f{ 1.f, -1.f, -1.f},
+        Vec3f{ 1.f,  1.f, -1.f},
+        Vec3f{-1.f,  1.f, -1.f},
+        Vec3f{-1.f, -1.f,  1.f},
+        Vec3f{ 1.f, -1.f,  1.f},
+        Vec3f{ 1.f,  1.f,  1.f},
+        Vec3f{-1.f,  1.f,  1.f}
+    };
+    
+    // Helper to add quad: 2 Dreiecke (6 Vertices)
+    auto pushQuad = [&](Vec3f a, Vec3f b, Vec3f c, Vec3f d,
+                        Vec3f n,
+                        Vec3f uva, Vec3f uvb, Vec3f uvc, Vec3f uvd) {
+        // Dreieck 1: a, b, c
+        vertices.push_back({a, n, color, uva});
+        vertices.push_back({b, n, color, uvb});
+        vertices.push_back({c, n, color, uvc});
+        // Dreieck 2: a, c, d
+        vertices.push_back({a, n, color, uva});
+        vertices.push_back({c, n, color, uvc});
+        vertices.push_back({d, n, color, uvd});
+    };
+
+    // Immer das ccw vom inneren der Würfeloberfläche sichtbare Dreiecksnetz definieren
+    // Front face (z = -1)
+    pushQuad(corners[0], corners[1], corners[2], corners[3],
+            Vec3f{0,0,-1},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Back face (z = +1)
+    pushQuad(corners[4], corners[7], corners[6], corners[5],
+            Vec3f{0,0,1},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Left face (x = -1)
+    pushQuad(corners[0], corners[3], corners[7], corners[4],
+            Vec3f{-1,0,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Right face (x = +1)
+    pushQuad(corners[1], corners[5], corners[6], corners[2],
+            Vec3f{1,0,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Bottom face (y = -1)
+    pushQuad(corners[0], corners[4], corners[5], corners[1],
+            Vec3f{0,-1,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Top face (y = +1)
+    pushQuad(corners[3], corners[2], corners[6], corners[7],
+            Vec3f{0,1,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+    
+    return vertices;
 }
 
 std::vector<Vertex> CreateCylinder(const Vec3f& color)
@@ -45,7 +104,7 @@ std::vector<Vertex> CreateSphere(const Vec3f& color)
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv, "assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("GUI", 800, 600);
@@ -58,36 +117,68 @@ int main(int argc, char** argv)
     }
 
     /* Create camera */
-    Camera camera(Vec3f{ 0.0f, 2.0f, 3.0f });
-    camera.RotateAroundSide(-10.0f);
+    Camera camera(Vec3f{ 0.0f, 1.0f, 3.0f });
+    camera.RotateAroundSide(-10.0f); // leicht nach unten geneigt
 
     /* Model mat*/
     Mat4f modelMat = Mat4f::Identity();
 
     /* Use coordinate system as a dummy model so you see how VBO, VAOs work again. */
-    GLuint VBO;
-    glCreateBuffers(1, &VBO);
-    glNamedBufferData(VBO, 6 * sizeof(Vertex), Utils::CoordSystemRHZU(), GL_STATIC_DRAW);
+    GLuint VBO_Coord;
+    glCreateBuffers(1, &VBO_Coord);
+    glNamedBufferData(VBO_Coord, 6 * sizeof(Vertex), Utils::CoordSystemRHZU(), GL_STATIC_DRAW);
 
     /* VAO. */
-    GLuint VAO;
-    glCreateVertexArrays(1, &VAO);
-    glVertexArrayVertexBuffer(VAO, 0, VBO, 0, sizeof(Vertex));
+    GLuint VAO_Coord;
+    glCreateVertexArrays(1, &VAO_Coord);
+    glVertexArrayVertexBuffer(VAO_Coord, 0, VBO_Coord, 0, sizeof(Vertex));
     /* Position */ // Position is at offset 0
-    glVertexArrayAttribFormat(VAO, 0, 3, GL_FLOAT, GL_FALSE, 0);
-    glEnableVertexArrayAttrib(VAO, 0);
-    glVertexArrayAttribBinding(VAO, 0, 0);
+        // 0=index of the generic vertex attribute to be modified.
+        // 3=number of components per generic vertex attribute. Must be 1, 2, 3, or 4. (x,y,z)
+        // GL_FLOAT=data type of each component in the array. (float)
+        // GL_FALSE=normalized (GL_FALSE means that the values will be directly converted to float without normalization)
+        // 0=offset of the first component of the first generic vertex attribute in the array in the data store of the buffer currently bound to the GL_ARRAY_BUFFER target. (position is at offset 0)
+    glVertexArrayAttribFormat(VAO_Coord, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Coord, 0);
+        // Aktiviert Vertex-Attribut mit Index 0
+    glVertexArrayAttribBinding(VAO_Coord, 0, 0);
+        // Binds the vertex buffer to the vertex array object at the specified binding index (0 in this case).
+        //  This tells OpenGL which buffer to use for the vertex attribute data when rendering with this VAO.
     /* Normal */ // Normal is at offset 3 * bytes size(float)
-    glVertexArrayAttribFormat(VAO, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
-    glEnableVertexArrayAttrib(VAO, 1);
-    glVertexArrayAttribBinding(VAO, 1, 0);
-    // Aufgabe 3.1) Nutzen der Farbattribute.
+    glVertexArrayAttribFormat(VAO_Coord, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Coord, 1);
+    glVertexArrayAttribBinding(VAO_Coord, 1, 0);
+    // TODO: Aufgabe 3.1) Nutzen der Farbattribute.
     /* Color */ // Color is at offset 6 * bytes size(float)
-    glVertexArrayAttribFormat(VAO, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
-    glEnableVertexArrayAttrib(VAO, 2);
-    glVertexArrayAttribBinding(VAO, 2, 0);
+    glVertexArrayAttribFormat(VAO_Coord, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Coord, 2);
+    glVertexArrayAttribBinding(VAO_Coord, 2, 0);
 
-    // Aufgabe 3.2) Erzeugung von Zylinder, Quader, Kugeln
+    // TODO: Aufgabe 3.2) Erzeugung von Zylinder, Quader, Kugeln
+    std::vector<Vertex> cubeVertices = CreateCube(Vec3f{1.0f, 0.0f, 0.0f}); // Red cube
+    GLuint VBO_Cube;
+    glCreateBuffers(1, &VBO_Cube);
+    glNamedBufferData(VBO_Cube, cubeVertices.size() * sizeof(Vertex), cubeVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Cube;
+    glCreateVertexArrays(1, &VAO_Cube);
+    glVertexArrayVertexBuffer(VAO_Cube, 0, VBO_Cube, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Cube, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Cube, 0);
+    glVertexArrayAttribBinding(VAO_Cube, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Cube, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Cube, 1);
+    glVertexArrayAttribBinding(VAO_Cube, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Cube, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Cube, 2);
+    glVertexArrayAttribBinding(VAO_Cube, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Cube, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Cube, 3);
+    glVertexArrayAttribBinding(VAO_Cube, 3, 0);
 
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
@@ -159,12 +250,24 @@ int main(int argc, char** argv)
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
         shader.Use();
-        glBindVertexArray(VAO);
+        glBindVertexArray(VAO_Coord);
+        
+        // Beschreibt, wie das Modell im Weltenkoordinatensystem transformiert wird. (z.B. Translation, Rotation, Skalierung)
         glUniformMatrix4fv(0, 1, GL_FALSE, modelMat.Data());
+        
+        // Beschreibt die Position und Orientierung der Kamera. (z.B. Kamera-Position, Blickrichtung, Up-Vektor)
         glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
+        
+        // Beschreibt die Projektion, also wie die 3D-Szene auf den 2D-Bildschirm projiziert wird. (z.B. Perspektivische oder orthografische Projektion)
+            // Sorgt, dass entfernte Objekte kleiner erscheinen, was einen realistischen 3D-Effekt erzeugt.
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
 
         glDrawArrays(GL_LINES, 0, 6);
+        // GL_Lines = Zeichenmodus; jedes Paar von Vertices wird als Linie interpretiert. (6 Vertices = 3 Linien für die Koordinatenachsen)
+
+        // Draw the cube.
+        glBindVertexArray(VAO_Cube);
+        glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -173,8 +276,12 @@ int main(int argc, char** argv)
 
     /* GL Resources shutdown. */
     shader.Delete();
-    glDeleteBuffers(1, &VBO);
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO_Coord);
+    glDeleteVertexArrays(1, &VAO_Coord);
+
+    glDeleteBuffers(1, &VBO_Cube);
+        // 1=Anzahl der zu löschenden Vertex Buffer Objects, &VBO_Cube=Adresse des zu löschenden Vertex Buffer Objects
+    glDeleteVertexArrays(1, &VAO_Cube);
 
     /* Ramen Shutdown */
     pRamen->Shutdown();

@@ -23,7 +23,7 @@
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv, "assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("GUI", 800, 600);
