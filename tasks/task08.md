@@ -1,8 +1,8 @@
-# Task 08 - Blinn-Phong Beleuchtungsmodell und Normalmapping.
+# Task 08 - Phong-Blinn Beleuchtungsmodell und Normalmapping.
 
-## 8.0 Blinn-Phong Beleuchtungsmodell
+## 8.0 Phong-Blinn Beleuchtungsmodell
 
-Erweitern Sie Ihren Renderer um das **Blinn-Phong Beleuchtungsmodell**.
+Erweitern Sie Ihren Renderer um das **Phong-Blinn Beleuchtungsmodell**.
 Bauen Sie dazu auf dem Code aus Task 07 auf.
 Eine detaillierte Abhandlung des Beleuchtungsmodells finden Sie in
 *Computergrafik, Band 1 - Nischwitz et al.* in **Kapitel 12.1.3**.
