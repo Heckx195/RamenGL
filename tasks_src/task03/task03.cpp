@@ -1,6 +1,9 @@
 #include <glad/glad.h>
 
+#define _USE_MATH_DEFINES
+
 #include <assert.h>
+#include <cmath>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -90,16 +93,153 @@ std::vector<Vertex> CreateCube(const Vec3f& color)
     return vertices;
 }
 
-std::vector<Vertex> CreateCylinder(const Vec3f& color)
+// Cylinder: radius=1, height from y=-1 to y=+1, centered at origin
+std::vector<Vertex> CreateCylinder(const Vec3f& color, int slices = 32)
 {
-    // placeholder.
-    return std::vector<Vertex>{};
+    std::vector<Vertex> vertices;
+
+    const float pi = (float)M_PI;
+
+    // Vorberechnung der Punkte auf dem Ring für Top und Bottom.
+    std::vector<Vec3f> top(slices);
+    std::vector<Vec3f> bot(slices);
+    for (int i = 0; i < slices; ++i)
+    {
+        // Aktueller Winkel für die Berechnung der x- und z-Koordinaten der Ringpunkte.
+        float theta = 2.f * pi * i / slices;
+        
+        // Berechnet x-Koordinate auf Einheitskreis.
+        float x = std::cos(theta);
+
+        // Berechnet z-Koordinate auf Einheitskreis.
+        float z = std::sin(theta);
+
+        top[i] = Vec3f{ x,  1.f, z }; // y=0 ist Zentrum vom Zylinder, also y=1 ist die Oberseite.
+        bot[i] = Vec3f{ x, -1.f, z };
+    }
+
+    Vec3f capTop{ 0.f,  1.f, 0.f }; // Mittelpunkt der oberen Kreisfläche (y=1)
+    Vec3f capBot{ 0.f, -1.f, 0.f }; // Mittelpunkt der unteren Kreisfläche (y=-1)
+    Vec3f nTop  { 0.f,  1.f, 0.f }; // Normalenvektor für die obere Kreisfläche (zeigt nach oben)
+    Vec3f nBot  { 0.f, -1.f, 0.f }; // Normalenvektor für die untere Kreisfläche (zeigt nach unten)
+
+    // Pro Durchgang werden erzeugt:
+    //  2 Dreiecke für den Mantel
+    //  1 Dreieck für den Deckel (Kreisfläche)
+    //  1 Dreieck für den Boden (Kreisfläche)
+    for (int i = 0; i < slices; ++i)
+    {
+        int j = (i + 1) % slices; // Index des nächsten Punkts im Ring, mit Wrap-Around
+        
+        // UV-Koordinaten für die Seitenfläche: u entlang des Rings
+        float u0 = float(i) / slices; // u0=0 am Startpunkt
+        float u1 = float(i + 1) / slices; // u1=1 am Ende des Rings (wenn i+1 == slices, dann wrap-around zu 0, was korrekt ist)
+
+        // Side quads (Mantel) (zwei Dreiecke pro Segment)
+        // Normalen für die Seitenfläche: zeigen radial nach außen, also in Richtung der xz-Koordinaten der Ringpunkte.
+        // [Bild zeichnen]
+        Vec3f n0{ bot[i].x, 0.f, bot[i].z }; // Normalenvektor für den Punkt bot[i] auf der Seitenfläche (y-Komponente ist 0, da die Normalen horizontal sind)
+        Vec3f n1{ bot[j].x, 0.f, bot[j].z }; // Normalenvektor für den Punkt bot[j] auf der Seitenfläche
+
+        
+        // Triangle 1: bot[i], top[i], top[j]
+            // UV-Koordinaten gehen von (0,0) unten links bis (1,1) oben rechts.
+        vertices.push_back({ bot[i], n0, color, Vec3f{u0, 0.f, 0.f} });
+        vertices.push_back({ top[i], n0, color, Vec3f{u0, 1.f, 0.f} });
+        vertices.push_back({ top[j], n1, color, Vec3f{u1, 1.f, 0.f} });
+        // Triangle 2: bot[i], top[j], bot[j]
+        vertices.push_back({ bot[i], n0, color, Vec3f{u0, 0.f, 0.f} });
+        vertices.push_back({ top[j], n1, color, Vec3f{u1, 1.f, 0.f} });
+        vertices.push_back({ bot[j], n1, color, Vec3f{u1, 0.f, 0.f} });
+
+        // Top cap (Deckel)
+        // UV: Map Einheitskreis auf [0,1]^2
+            // top[i].x und top[i].z liegen im Bereich [-1, 1]. Um sie in den Bereich [0, 1] zu bringen, wird die Formel (x * 0.5 + 0.5) verwendet.
+            // Die Skalierung mit 0.5 reduziert den Bereich von [-1, 1] auf [-0.5, 0.5],
+            // und die anschließende Addition von 0.5 verschiebt den Bereich auf [0, 1]. 
+            // Ein Randpunkt (-1, -1) wird zu (0, 0), (+1, +1) zu (1, 1).
+        Vec3f uvC { 0.5f, 0.5f, 0.f }; // Mittelpunkt der Kreisfläche (0,0) soll auf (0.5,0.5) in UV liegen
+        Vec3f uv0T{ top[i].x * .5f + .5f, top[i].z * .5f + .5f, 0.f };
+        Vec3f uv1T{ top[j].x * .5f + .5f, top[j].z * .5f + .5f, 0.f };
+        // ccw when viewed from +y
+        vertices.push_back({ capTop, nTop, color, uvC  });
+        vertices.push_back({ top[j], nTop, color, uv1T });
+        vertices.push_back({ top[i], nTop, color, uv0T });
+
+        // Bottom cap (Boden)
+        // UV: Map Einheitskreis auf [0,1]^2
+        Vec3f uv0B{ bot[i].x * .5f + .5f, bot[i].z * .5f + .5f, 0.f };
+        Vec3f uv1B{ bot[j].x * .5f + .5f, bot[j].z * .5f + .5f, 0.f };
+        // ccw when viewed from -y
+        vertices.push_back({ capBot, nBot, color, uvC  });
+        vertices.push_back({ bot[i], nBot, color, uv0B });
+        vertices.push_back({ bot[j], nBot, color, uv1B });
+    }
+
+    return vertices;
 }
 
-std::vector<Vertex> CreateSphere(const Vec3f& color)
+std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices = 32)
 {
-    // placeholder.
-    return std::vector<Vertex>{};
+    std::vector<Vertex> vertices;
+
+    const float pi = (float)M_PI;
+
+    // Stacks: horizontale Bänder von Dreiecken, von oben (phi=0) nach unten (phi=pi) (Breitengrade)
+    // Slices: vertikale Segmente von Dreiecken, um die y-Achse herum, von 0 bis 2*pi (Längengrade)
+
+    // phi   in [0, pi]   top→bottom
+    // theta in [0, 2*pi] around y-axis
+
+    // Man läuft Ring für Ring durch (stacks/ vertikale Bänder) und läuft dann horizontal durch die Segmente (slices) eines Bandes.
+        // Pro Segment werden 2 Dreiecke erzeugt, die ein kleines Rechteck auf der Kugeloberfläche bilden.  
+    for (int s = 0; s < stacks; ++s)
+    {
+        float phi0 = pi * s       / stacks;   // top of band
+        float phi1 = pi * (s + 1) / stacks;   // bottom of band
+
+        for (int i = 0; i < slices; ++i)
+        {
+            // theta ist der Drehwinkel um y-Achse, der die Position der Punkte auf dem Ring definiert.
+                // theta0: Startwinkel des aktuellen Segements
+                // theta1: Endwinkel des aktuellen Segments
+            float theta0 = 2.f * pi * i       / slices;
+            float theta1 = 2.f * pi * (i + 1) / slices;
+
+            // Unit-sphere positions (= outward normals)
+            auto pos = [](float phi, float theta) -> Vec3f {
+                return Vec3f{
+                    std::sin(phi) * std::cos(theta), // x
+                    std::cos(phi),                   // y
+                    std::sin(phi) * std::sin(theta)  // z
+                };
+            };
+
+            Vec3f p00 = pos(phi0, theta0);  Vec3f p01 = pos(phi0, theta1); // Ring oben, links rechts
+            Vec3f p10 = pos(phi1, theta0);  Vec3f p11 = pos(phi1, theta1); // Ring unten, links rechts
+
+            // UV: u = theta/(2pi), v = phi/pi -> Umrechnung in [0,1]^2
+                // theta / (2*pi) = Ein Wert zwischen 0.0 und 1.0 auf der U-Achse (links nach rechts).
+                // phi / pi = Ein Wert zwischen 0.0 und 1.0 auf der V-Achse (oben nach unten).
+            Vec3f uv00{ theta0/(2*pi), phi0/pi, 0.f };
+            Vec3f uv01{ theta1/(2*pi), phi0/pi, 0.f };
+            Vec3f uv10{ theta0/(2*pi), phi1/pi, 0.f };
+            Vec3f uv11{ theta1/(2*pi), phi1/pi, 0.f };
+
+            // Auf einer Einheitskugel ist die Normalenrichtung gleich der Position,
+                // da die Normalenvektoren von der Mitte der Kugel nach außen zeigen
+            // Triangle 1: p00, p10, p11  (ccw from outside)
+            vertices.push_back({ p00, p00, color, uv00 });
+            vertices.push_back({ p10, p10, color, uv10 });
+            vertices.push_back({ p11, p11, color, uv11 });
+            // Triangle 2: p00, p11, p01
+            vertices.push_back({ p00, p00, color, uv00 });
+            vertices.push_back({ p11, p11, color, uv11 });
+            vertices.push_back({ p01, p01, color, uv01 });
+        }
+    }
+
+    return vertices;
 }
 
 int main(int argc, char** argv)
@@ -154,7 +294,7 @@ int main(int argc, char** argv)
     glEnableVertexArrayAttrib(VAO_Coord, 2);
     glVertexArrayAttribBinding(VAO_Coord, 2, 0);
 
-    // TODO: Aufgabe 3.2) Erzeugung von Zylinder, Quader, Kugeln
+    // TODO: Aufgabe 3.2) Erzeugung von Quader
     std::vector<Vertex> cubeVertices = CreateCube(Vec3f{1.0f, 0.0f, 0.0f}); // Red cube
     GLuint VBO_Cube;
     glCreateBuffers(1, &VBO_Cube);
@@ -179,6 +319,58 @@ int main(int argc, char** argv)
     glVertexArrayAttribFormat(VAO_Cube, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
     glEnableVertexArrayAttrib(VAO_Cube, 3);
     glVertexArrayAttribBinding(VAO_Cube, 3, 0);
+
+    // TODO: Aufgabe 3.2) Erzeugung von Zylinder
+    std::vector<Vertex> cylinderVertices = CreateCylinder(Vec3f{0.0f, 1.0f, 0.0f}); // Green cylinder
+    GLuint VBO_Cylinder;
+    glCreateBuffers(1, &VBO_Cylinder);
+    glNamedBufferData(VBO_Cylinder, cylinderVertices.size() * sizeof(Vertex), cylinderVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Cylinder;
+    glCreateVertexArrays(1, &VAO_Cylinder);
+    glVertexArrayVertexBuffer(VAO_Cylinder, 0, VBO_Cylinder, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Cylinder, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Cylinder, 0);
+    glVertexArrayAttribBinding(VAO_Cylinder, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Cylinder, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Cylinder, 1);
+    glVertexArrayAttribBinding(VAO_Cylinder, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Cylinder, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Cylinder, 2);
+    glVertexArrayAttribBinding(VAO_Cylinder, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Cylinder, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Cylinder, 3);
+    glVertexArrayAttribBinding(VAO_Cylinder, 3, 0);
+
+    // TODO: Aufgabe 3.2) Erzeugung von Kugeln
+    std::vector<Vertex> sphereVertices = CreateSphere(Vec3f{0.0f, 0.0f, 1.0f}); // Blue sphere
+    GLuint VBO_Sphere;
+    glCreateBuffers(1, &VBO_Sphere);
+    glNamedBufferData(VBO_Sphere, sphereVertices.size() * sizeof(Vertex), sphereVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Sphere;
+    glCreateVertexArrays(1, &VAO_Sphere);
+    glVertexArrayVertexBuffer(VAO_Sphere, 0, VBO_Sphere, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Sphere, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Sphere, 0);
+    glVertexArrayAttribBinding(VAO_Sphere, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Sphere, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Sphere, 1);
+    glVertexArrayAttribBinding(VAO_Sphere, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Sphere, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Sphere, 2);
+    glVertexArrayAttribBinding(VAO_Sphere, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Sphere, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Sphere, 3);
+    glVertexArrayAttribBinding(VAO_Sphere, 3, 0);
 
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
@@ -265,9 +457,26 @@ int main(int argc, char** argv)
         glDrawArrays(GL_LINES, 0, 6);
         // GL_Lines = Zeichenmodus; jedes Paar von Vertices wird als Linie interpretiert. (6 Vertices = 3 Linien für die Koordinatenachsen)
 
+        // Basis-Transformation für alle Modelle: Skalierung, damit sie nicht zu groß sind.
+        Mat4f baseScale = Scale(Vec3f{ 0.4f, 0.4f, 0.4f });
+
         // Draw the cube.
+        Mat4f cubeModel = modelMat * Translate(Vec3f{0.0f, 0.0f, 0.0f}) * baseScale;
+        glUniformMatrix4fv(0, 1, GL_FALSE, cubeModel.Data());
         glBindVertexArray(VAO_Cube);
         glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size());
+
+        // Draw the cylinder.
+        Mat4f cylinderModel = modelMat * Translate(Vec3f{-1.2f, 0.0f, 0.0f}) * baseScale;
+        glUniformMatrix4fv(0, 1, GL_FALSE, cylinderModel.Data());
+        glBindVertexArray(VAO_Cylinder);
+        glDrawArrays(GL_TRIANGLES, 0, cylinderVertices.size());
+
+        // Draw the sphere.
+        Mat4f sphereModel = modelMat * Translate(Vec3f{1.2f, 0.0f, 0.0f}) * baseScale;
+        glUniformMatrix4fv(0, 1, GL_FALSE, sphereModel.Data());
+        glBindVertexArray(VAO_Sphere);
+        glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

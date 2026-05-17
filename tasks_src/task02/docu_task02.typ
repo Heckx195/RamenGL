@@ -4,12 +4,13 @@ cmake --build build/
 ./build/Debug/task02.exe
 ```
 
-== Vertex-Array-Object (VAO)
-Ein VAO speichert den Zustand von Vertex-Attributen und deren Zuordnung zu Vertex-Puffern.
-
 == Vertex-Buffer-Object (VBO)
-Ein VBO speichert Vertex-Daten (wie Positionen, Farben, Texturkoordinaten, Normalen, ...) im Grafikspeicher der GPU. Ermöglichen eine schnelle und wiederholte Nutzung von Vertex-Daten und reduzieren damit die Datenübertragung zwischen CPU und GPU.
+Ein VBO speichert Vertex-Daten (wie Positionen, Farben, Texturkoordinaten, Normalen, ...) im Grafikspeicher der GPU. Ermöglichen eine schnelle und wiederholte Nutzung von Vertex-Daten und reduzieren damit die Datenübertragung zwischen CPU und GPU. Die Daten liegen hintereinander im Speicher, wobei die Struktur der Daten durch die Vertex-Attribut-Definitionen in einem Vertex-Array-Objekt (VAO) festgelegt wird.
 
+== Vertex-Array-Object (VAO)
+Ein VAO speichert den Zustand von Vertex-Attributen und deren Zuordnung zu Vertex-Puffern. Es definiert, wie die Vertex-Daten interpretiert werden sollen, indem es die Verknüpfung zwischen Vertex-Attributen und den entsprechenden Vertex-Buffer-Objekten (VBOs) herstellt. Ein VAO ermöglicht es, die Konfiguration von Vertex-Attributen zu speichern und wiederzuverwenden, ohne sie jedes Mal neu konfigurieren zu müssen.
+
+#line(length: 100%)
 
 = Aufgabe02
 https://docs.gl/
@@ -29,6 +30,8 @@ Wird verwendet, um ein oder mehrere Buffer-Objekte als Speicherbereiche auf der 
 
 Der Unterschied zu glGenBuffers(...) liegt darin, dass ein Objekt zuerst gebunden werden muss, bevor es konfiguriert oder verwendet werden kann. Die Funktion gehört zur älteren OpenGL-API (vor DSA) und erzeugt nur Namen für Buffer-Objekte, ohne sie zu initialisieren. Für die Nutzung muss das Buffer-Objekt erst mit glBindBuffer an ein Zieltyp (bspw. $"GL_ARRAY_BUFFER"$) gebunden werden.
 
+#line(length: 100%)
+
 == glNamedBufferSubData(...)
 ```c
 void glNamedBufferSubData(
@@ -46,6 +49,7 @@ void glNamedBufferSubData(
 
 Wird verwendet, um einen Teilbereich eines bereits existierenden Buffer-Objekts zu aktualisieren, ohne den gesamten Puffer neu zu laden. Die Funktion benötigt keine vorherige Bindung des Buffer-Objekts, wie es bei glBufferSubData der Fall wäre. Stattdessen wird das Zielobjekt direkt über seine ID angegeben.
 
+#line(length: 100%)
 
 == glCreateVertexArrays(...)
 ```c
@@ -59,6 +63,8 @@ void glCreateVertexArrays(
 - arrays: Ein Zeiger auf ein Array, in dem die generierten VAO-Namen (IDs) gespeichert werden.
 
 Wird verwendet, um Vertex-Array-Objekte (VAO) zu erstellen. Erstellt eine oder mehrere VAOs und speichert die Namen (IDs) der VAOs in das übergebene Array. VAOs speichern den Zustand von Vertex-Attributen und deren Zuordnung zu Vertex-Puffern. Die Funktion ist ebenso Teil des Direct State Access (DSA)-Ansatzes und die erzeugten VAOs müssen nicht gebunden werden, um sie zu konfigurieren.
+
+#line(length: 100%)
 
 == glVertexArrayVertexBuffer(...)
 ```c
@@ -79,6 +85,8 @@ void glVertexArrayVertexBuffer(
 
 Wird verwendet, um ein Vertex-Buffer-Objekt (VBO) mit einem Vertex-Array-Objekt (VAO) zu verknüpfen. Legt fest, welcher Vertex-Buffer für einen bestimmten Binding-Index eines VAOs verwendet werden soll. Die Funktion ist Teil der DSA-API und ermöglicht eine effziente Verwaltung von Vertex-Daten ohne vorheriges Binding.
 
+#line(length: 100%)
+
 == glVertexArrayAttribBinding(...)
 ```c
 void glVertexArrayAttribBinding(
@@ -93,6 +101,8 @@ void glVertexArrayAttribBinding(
 - bindingindex: Binding-Index, der mit dem Attribut verknüpft wird.
 
 Wird verwendet, um ein Vertex-Attribut mit einem Binding-Index eines Vertex-Array-Objekts (VAO) zu verknüpfen. Legt fest, welcher Binding-Index für ein bestimmtes Vertex-Attribut verwendet werden soll. Der Binding-Index gibt an, welcher Vertex-Puffer (VBO) die Daten für das Attribut bereitstellt.
+
+#line(length: 100%)
 
 == glVertexArrayAttribFormat(...)
 ```c
@@ -115,6 +125,8 @@ void glVertexArrayAttribFormat(
 
 Wird verwendet, um das Datenformat eines Vertex-Attributs zu definieren. Legt fest, wie die Daten für ein bestimmtes Vertex-Attribut interpretiert werden sollen. Bestandteile der Definition sind: die Anzahl der Komponenten, der Datentyp, die Normalisierung und der Offset innerhalb eines Vertex-Datensatzes. Ein Vertex-Buffer kann Vertex-Attribute mit unterschiedlichen Datentypen beinhalten.
 
+#line(length: 100%)
+
 == glEnableVertexArrayAttrib(...)
 ```c
 void glEnableVertexArrayAttrib(
@@ -128,6 +140,8 @@ void glEnableVertexArrayAttrib(
 
 Wird verwendet, um ein Vertex-Attribut in einem Vertex-Array-Objekt (VAO) zu aktivieren. Durch die Aktivierung des Vertex-Attributs eines VAOs wird dieses in der OpenGL-Pipeline verwendet. Im deaktivierten Zustand wird das Attribut von der Pipeline ignoriert.
 
+#line(length: 100%)
+
 == glBindVertexArray(...)
 ```c
 void glBindVertexArray(
@@ -138,6 +152,8 @@ void glBindVertexArray(
 - array: Name/ ID des zu bindenen Vertex-Array-Objekts (VAO). Wenn array den Wert 0 hat, wird das aktuelle VAO entbunden.
 
 Wird verwendet, um ein Vertex-Array-Objekt (VAO) an den aktuellen OpenGL-Kontext zu binden. Gehört zur ältern OpenGL-API (vor DSA). Durch das Binden wird das VAO aktiviert, sodass alle nachfolgenden Befehle, die Vertex-Attribute oder Vertex-Buffer betreffen, auf dieses VAO angewendet werden.
+
+#line(length: 100%)
 
 == glDrawArrays(...)
 ```c
@@ -153,5 +169,3 @@ void glDrawArrays(
 - count: Anzahl der zu verwendenden Vertices (ab dem Index first).
 
 Wird verwendet, um Primitiven (wie Punkte, Linien oder Dreiecke) aus dem aktuell gebundenen Vertex-Daten zu rendern. Die Vertex-Daten kommen aus den aktuell gebundenen Vertex-Array-Objekten (VAOs) und Vertex-Buffer-Objekten (VBOs). Die Funktion verwendet die Vertex-Daten in der Reihenfolge, in der sie im Buffer gespeichert sind.
-
-= Aufgabe03
