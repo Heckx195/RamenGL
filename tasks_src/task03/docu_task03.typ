@@ -38,3 +38,8 @@ eine geeignete mathematische Lösung her.
 - Das *Lambert cosine law* besagt, dass die Intensität des von einer Oberfläche reflektierten Lichts proportional zum Kosinus des Winkels zwischen der Normalen der Oberfläche und der Richtung des einfallenden Lichts ist. So größer der Winkel zwischen Normalen und Lichtquelle, desto schwächer die Beleuchtung.
 - Bei der Transformation von Modellen bei nicht-uniformen Skalierungen können die Normalenvektoren nicht einfach mit der Modellmatrix transformiert werden, da dies zu verzerrten Normalen führt. Das Problem ist, dass die Normalenvektoren orthogonal zur Oberfläche bleiben müssen, aber eine nicht-uniforme Skalierung kann diese Orthogonalität zerstören. Wenn die Oberfläche t mit positiver x-Komponente wird eine x-Streckung das t nach rechts drehen -> -18 Grad. Der Normalenvektor n mit negativer x-Komponente wird durch die gleiche x-Streckung nach rechts gedreht -> +18 Grad. Das Ergebnis ist, dass n nicht mehr orthogonal zu t ist, was zu falschen Beleuchtungsergebnissen führt.
 - Deshalb muss die Transformation der Normalenvektoren mit der Inversen Transponierten der Modellmatrix erfolgen, um sicherzustellen, dass die Normalen korrekt transformiert werden und ihre Orthogonalität zur Oberfläche beibehalten wird.
+- Die trigonometrische Funktion Cosinus ist 1 bei 0° und 0 bei 90°
+- diffuse = max(0, dot(N, L)) \* lightColor \* objectColor
+  - Mit max(0, ..) werden nur positive Werte berücksichtigt - keine negativen Beleuchtungswerte
+  - dot(N, L) berechnet den Winkel zwischen Normalenvektor N und Lichtvektor L
+  - lightColor ist die Farbe des Lichts

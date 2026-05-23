@@ -49,17 +49,17 @@ std::vector<Vertex> CreateCube(const Vec3f& color)
     auto pushQuad = [&](Vec3f a, Vec3f b, Vec3f c, Vec3f d,
                         Vec3f n,
                         Vec3f uva, Vec3f uvb, Vec3f uvc, Vec3f uvd) {
-        // Dreieck 1: a, b, c
+        // Dreieck 1: a, c, b -> von außen ccw
         vertices.push_back({a, n, color, uva});
-        vertices.push_back({b, n, color, uvb});
-        vertices.push_back({c, n, color, uvc});
-        // Dreieck 2: a, c, d
+        vertices.push_back({c, n, color, uvb});
+        vertices.push_back({b, n, color, uvc});
+        // Dreieck 2: a, d, c -> von außen ccw
         vertices.push_back({a, n, color, uva});
-        vertices.push_back({c, n, color, uvc});
-        vertices.push_back({d, n, color, uvd});
+        vertices.push_back({d, n, color, uvc});
+        vertices.push_back({c, n, color, uvd});
     };
 
-    // Immer das ccw vom inneren der Würfeloberfläche sichtbare Dreiecksnetz definieren
+    // CCW von außen der Würfeloberfläche sichtbare Dreiecksnetz definieren
     // Front face (z = -1)
     pushQuad(corners[0], corners[1], corners[2], corners[3],
             Vec3f{0,0,-1},
@@ -507,6 +507,10 @@ int main(int argc, char** argv)
         // Beschreibt die Projektion, also wie die 3D-Szene auf den 2D-Bildschirm projiziert wird. (z.B. Perspektivische oder orthografische Projektion)
             // Sorgt, dass entfernte Objekte kleiner erscheinen, was einen realistischen 3D-Effekt erzeugt.
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
+        
+        // Lichtquelle in Weltkoordinaten
+        Vec3f lightPos{ 5.0f, 0.0f, -5.0f };
+        glUniform3fv(3, 1, lightPos.Data()); // als uniform in fragment-shader an pos3 packen
 
         glDrawArrays(GL_LINES, 0, 6);
         // GL_Lines = Zeichenmodus; jedes Paar von Vertices wird als Linie interpretiert. (6 Vertices = 3 Linien für die Koordinatenachsen)
