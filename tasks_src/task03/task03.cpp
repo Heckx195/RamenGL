@@ -242,6 +242,31 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
     return vertices;
 }
 
+// Erzeugt Liniensegmente zur Visualisierung der Normalenvektoren.
+std::vector<Vertex> CreateNormalLines(const std::vector<Vertex>& mesh, float scale = 0.2f)
+{
+    std::vector<Vertex> lines;
+
+    // Pro Vertex wird eine Linie von der Position zur Position + Normale * scale erzeugt.
+    for (const Vertex& v : mesh)
+    {
+        // Die Farbe der Linie wird aus der Normalenrichtung berechnet: Mapping von [-1,1] auf [0,1].
+        Vec3f color{
+            v.normal.x * 0.5f + 0.5f, // *0.5f + 0.5f -> Verschiebung des RGB-Werts von [-1,1] auf [0,1]
+            v.normal.y * 0.5f + 0.5f,
+            v.normal.z * 0.5f + 0.5f
+        };
+        lines.push_back({ v.position, v.normal, color, Vec3f{0,0,0} });
+        lines.push_back({
+            Vec3f{ v.position.x + v.normal.x * scale, // position -> Ankerpunkt
+                   v.position.y + v.normal.y * scale,
+                   v.position.z + v.normal.z * scale },
+            v.normal, color, Vec3f{0,0,0}
+        });
+    }
+    return lines;
+}
+
 int main(int argc, char** argv)
 {
     Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
@@ -372,6 +397,35 @@ int main(int argc, char** argv)
     glEnableVertexArrayAttrib(VAO_Sphere, 3);
     glVertexArrayAttribBinding(VAO_Sphere, 3, 0);
 
+    // Normal visualization: Liniensegmente für jeden Mesh
+    auto makeNormalVAO = [](GLuint& vbo, GLuint& vao, const std::vector<Vertex>& lines)
+    {
+        glCreateBuffers(1, &vbo);
+        glNamedBufferData(vbo, lines.size() * sizeof(Vertex), lines.data(), GL_STATIC_DRAW);
+        glCreateVertexArrays(1, &vao);
+        glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
+        glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
+        glEnableVertexArrayAttrib(vao, 0);
+        glVertexArrayAttribBinding(vao, 0, 0);
+        glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+        glEnableVertexArrayAttrib(vao, 2);
+        glVertexArrayAttribBinding(vao, 2, 0);
+    };
+
+    // TODO: Aufgabe 3.4) Anzeige/ Debugging von Normalenvektoren
+    std::vector<Vertex> cubeNormals     = CreateNormalLines(cubeVertices);
+    std::vector<Vertex> cylinderNormals = CreateNormalLines(cylinderVertices);
+    std::vector<Vertex> sphereNormals   = CreateNormalLines(sphereVertices);
+
+    GLuint VBO_CubeNormals, VAO_CubeNormals;
+    makeNormalVAO(VBO_CubeNormals, VAO_CubeNormals, cubeNormals);
+
+    GLuint VBO_CylinderNormals, VAO_CylinderNormals;
+    makeNormalVAO(VBO_CylinderNormals, VAO_CylinderNormals, cylinderNormals);
+
+    GLuint VBO_SphereNormals, VAO_SphereNormals;
+    makeNormalVAO(VBO_SphereNormals, VAO_SphereNormals, sphereNormals);
+
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -465,18 +519,27 @@ int main(int argc, char** argv)
         glUniformMatrix4fv(0, 1, GL_FALSE, cubeModel.Data());
         glBindVertexArray(VAO_Cube);
         glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size());
+        // Normalenvektoren des Würfels
+        glBindVertexArray(VAO_CubeNormals);
+        glDrawArrays(GL_LINES, 0, (GLsizei)cubeNormals.size());
 
         // Draw the cylinder.
         Mat4f cylinderModel = modelMat * Translate(Vec3f{-1.2f, 0.0f, 0.0f}) * baseScale;
         glUniformMatrix4fv(0, 1, GL_FALSE, cylinderModel.Data());
         glBindVertexArray(VAO_Cylinder);
         glDrawArrays(GL_TRIANGLES, 0, cylinderVertices.size());
+        // Normalenvektoren des Zylinders
+        glBindVertexArray(VAO_CylinderNormals);
+        glDrawArrays(GL_LINES, 0, (GLsizei)cylinderNormals.size());
 
         // Draw the sphere.
         Mat4f sphereModel = modelMat * Translate(Vec3f{1.2f, 0.0f, 0.0f}) * baseScale;
         glUniformMatrix4fv(0, 1, GL_FALSE, sphereModel.Data());
         glBindVertexArray(VAO_Sphere);
         glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
+        // Normalenvektoren der Kugel
+        glBindVertexArray(VAO_SphereNormals);
+        glDrawArrays(GL_LINES, 0, (GLsizei)sphereNormals.size());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -489,8 +552,18 @@ int main(int argc, char** argv)
     glDeleteVertexArrays(1, &VAO_Coord);
 
     glDeleteBuffers(1, &VBO_Cube);
-        // 1=Anzahl der zu löschenden Vertex Buffer Objects, &VBO_Cube=Adresse des zu löschenden Vertex Buffer Objects
     glDeleteVertexArrays(1, &VAO_Cube);
+    glDeleteBuffers(1, &VBO_Cylinder);
+    glDeleteVertexArrays(1, &VAO_Cylinder);
+    glDeleteBuffers(1, &VBO_Sphere);
+    glDeleteVertexArrays(1, &VAO_Sphere);
+
+    glDeleteBuffers(1, &VBO_CubeNormals);
+    glDeleteVertexArrays(1, &VAO_CubeNormals);
+    glDeleteBuffers(1, &VBO_CylinderNormals);
+    glDeleteVertexArrays(1, &VAO_CylinderNormals);
+    glDeleteBuffers(1, &VBO_SphereNormals);
+    glDeleteVertexArrays(1, &VAO_SphereNormals);
 
     /* Ramen Shutdown */
     pRamen->Shutdown();
