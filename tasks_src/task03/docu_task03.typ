@@ -43,3 +43,18 @@ eine geeignete mathematische Lösung her.
   - Mit max(0, ..) werden nur positive Werte berücksichtigt - keine negativen Beleuchtungswerte
   - dot(N, L) berechnet den Winkel zwischen Normalenvektor N und Lichtvektor L
   - lightColor ist die Farbe des Lichts
+
+== 3.6) Bewegung der Kamera
+Erweitern Sie das Programm, sodass Sie die Kamera mit 
+der Tastatur steuern können. Sie sollten in der Lage sein,
+die Kamera entlang ihrer Achsen zu verschieben und um einen Winkel zu rotieren.
+Nutzen Sie für die Tastaturabfrage das Gerüst in der Eventloop und
+die Funktionalität von SDL3.
+Dokumentieren Sie welches Winkelvorzeichen die Kamera in welche Richtung
+rotieren bzw. verschiebt. Erklären Sie warum die Kamera sich so verhält. 
+
+-> *Lösung:*
+- Pitch Up: positive Roation um die X-Achse
+- Pitch Down: negative Rotation um die X-Achse
+- Yaw Left: positive Rotation um die Y-Achse
+- Yaw Right: negative Rotation um die Y-Achse

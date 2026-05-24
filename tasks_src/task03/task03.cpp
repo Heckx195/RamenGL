@@ -98,7 +98,7 @@ std::vector<Vertex> CreateCylinder(const Vec3f& color, int slices = 32)
 {
     std::vector<Vertex> vertices;
 
-    const float pi = (float)M_PI;
+    const float pi = RAMEN_PI;
 
     // Vorberechnung der Punkte auf dem Ring für Top und Bottom.
     std::vector<Vec3f> top(slices);
@@ -183,7 +183,7 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
 {
     std::vector<Vertex> vertices;
 
-    const float pi = (float)M_PI;
+    const float pi = RAMEN_PI;
 
     // Stacks: horizontale Bänder von Dreiecken, von oben (phi=0) nach unten (phi=pi) (Breitengrade)
     // Slices: vertikale Segmente von Dreiecken, um die y-Achse herum, von 0 bis 2*pi (Längengrade)
@@ -228,14 +228,14 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
 
             // Auf einer Einheitskugel ist die Normalenrichtung gleich der Position,
                 // da die Normalenvektoren von der Mitte der Kugel nach außen zeigen
-            // Triangle 1: p00, p10, p11  (ccw from outside)
+            // Triangle 1: p00, p11, p10  (ccw from outside)
             vertices.push_back({ p00, p00, color, uv00 });
+            vertices.push_back({ p11, p11, color, uv11 });
             vertices.push_back({ p10, p10, color, uv10 });
-            vertices.push_back({ p11, p11, color, uv11 });
-            // Triangle 2: p00, p11, p01
+            // Triangle 2: p00, p01, p11  (ccw from outside)
             vertices.push_back({ p00, p00, color, uv00 });
-            vertices.push_back({ p11, p11, color, uv11 });
             vertices.push_back({ p01, p01, color, uv01 });
+            vertices.push_back({ p11, p11, color, uv11 });
         }
     }
 
@@ -437,35 +437,59 @@ int main(int argc, char** argv)
     /* Main loop */
     bool isRunning = true;
     SDL_GL_SetSwapInterval(1); /* 1 = VSync enabled; 0 = VSync disabled */
-    while ( isRunning )
-    {
-
+    while ( isRunning ) {
         SDL_Event e;
-        while ( SDL_PollEvent(&e) )
-        {
+        while ( SDL_PollEvent(&e) ) {
             ImGui_ImplSDL3_ProcessEvent(&e);
             pRamen->ProcessInputEvent(e);
 
-            if ( e.type == SDL_EVENT_QUIT )
-            {
+            if ( e.type == SDL_EVENT_QUIT ) {
                 isRunning = false;
             }
 
-            if ( e.type == SDL_EVENT_KEY_DOWN )
-            {
-                switch ( e.key.key )
-                {
-                case SDLK_ESCAPE:
-                {
-                    isRunning = false;
-                }
-                break;
+            if ( e.type == SDL_EVENT_KEY_DOWN && e.key.key == SDLK_ESCAPE )
+                isRunning = false;
+        }
 
-                default:
-                {
-                }
-                }
-            }
+        // TODO: Aufgabe 3.6)
+        // Nicht unter SDL_PollEvent, weil der Input dann hackt, durch Hardware-Delay Falling/ Rising-Edge Delay.
+        {
+            const float rotateStep = 1.5f;  /* degrees per frame */
+            const float moveStep   = 0.05f; /* units per frame   */
+
+            /* Camera movement - Rotation */
+            if ( pRamen->KeyWentDown(SDLK_UP) || pRamen->KeyPressed(SDLK_UP) )
+                /* TODO: Pitch up camera */
+                camera.Pitch(rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_DOWN) || pRamen->KeyPressed(SDLK_DOWN) )
+                /* TODO: Pitch down camera */
+                camera.Pitch(-rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_LEFT) || pRamen->KeyPressed(SDLK_LEFT) )
+                /* TODO: Yaw left camera */
+                camera.Yaw(rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_RIGHT) || pRamen->KeyPressed(SDLK_RIGHT) )
+                /* TODO: Yaw right camera */
+                camera.Yaw(-rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_E) || pRamen->KeyPressed(SDLK_E) )
+                /* TODO: Roll right camera */
+                camera.Roll(rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_Q) || pRamen->KeyPressed(SDLK_Q) )
+                /* TODO: Roll left camera */
+                camera.Roll(-rotateStep);
+
+            /* Camera movement - Translation */
+            else if ( pRamen->KeyWentDown(SDLK_W) || pRamen->KeyPressed(SDLK_W) )
+                /* TODO: Move camera forward */
+                camera.DollyForward(moveStep);
+            else if ( pRamen->KeyWentDown(SDLK_S) || pRamen->KeyPressed(SDLK_S) )
+                /* TODO: Move camera backward */
+                camera.DollyForward(-moveStep);
+            else if ( pRamen->KeyWentDown(SDLK_A) || pRamen->KeyPressed(SDLK_A) )
+                /* TODO: Move camera left */
+                camera.DollySide(-moveStep);
+            else if ( pRamen->KeyWentDown(SDLK_D) || pRamen->KeyPressed(SDLK_D) )
+                /* TODO: Move camera right */
+                camera.DollySide(moveStep);
         }
 
         /* Query new frame dimensions */
@@ -546,7 +570,7 @@ int main(int argc, char** argv)
         glDrawArrays(GL_LINES, 0, (GLsizei)sphereNormals.size());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
+        pRamen->EndFrame();
         SDL_GL_SwapWindow(pRamen->GetWindow());
     }
 

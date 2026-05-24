@@ -10,8 +10,9 @@ layout(location = 3) uniform vec3 u_LightPos;
 
 void main()
 {
-    vec3 L = normalize(u_LightPos - in_WorldSpacePos); // L vector goes from worldSpacePos to lightPos
-    float diffuse = max(0.0f, dot(in_Normal, L));
+    vec3 N = normalize(in_Normal);
+    vec3 L = normalize(u_LightPos - in_WorldSpacePos);
+    float diffuse = max(0.0f, dot(N, L));
     float ambient = 0.1f;
     outColor = vec4(in_Color * (diffuse + ambient), 1.0f);
 }
