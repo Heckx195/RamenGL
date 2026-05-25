@@ -34,15 +34,15 @@ im Fragmentshader zu beachten?
 
 ## 8.1 Normalmapping
 
-Updaten Sie ihre `assets` mithilfe des `get_assets.sh` (UNIX)
+Updaten Sie Ihre `assets` mithilfe des `get_assets.sh` (UNIX)
 bzw. `setup.bat` (Windows) Scripts, um die nötigen Texturen
 und Modelle nachzuladen.
 
 Erweitern Sie Ihren Renderer nun um Bumpmapping mithilfe
 einer Normalmap.
 
-Erstellen Sie eine weitere OpenGL Textur und befüllen diese mit
-den Daten einer **Normalmap**. Sie finden ein Beispiel in
+Erstellen Sie eine weitere OpenGL Textur und befüllen Sie diese mit
+den Daten einer **Normalmap**. Sie finden eine solche Textur in
 `assets/textures/rock-wall-morter-bl/`.
 
 Laden Sie ausserdem die `unitplane.obj` (in `assets/models/`) als Modell, auf welches
