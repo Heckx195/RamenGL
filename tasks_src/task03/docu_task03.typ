@@ -54,7 +54,10 @@ Dokumentieren Sie welches Winkelvorzeichen die Kamera in welche Richtung
 rotieren bzw. verschiebt. Erklären Sie warum die Kamera sich so verhält. 
 
 -> *Lösung:*
+-> Rechte-Hand-Regel (x Daumen zeigt in positive Richtung, y Zeigefinger zeigt in positive Richtung, z Mittelfinger zeigt in positive Richtung)
 - Pitch Up: positive Roation um die X-Achse
 - Pitch Down: negative Rotation um die X-Achse
+  -> Läuft man ins positive an der X-Achse neigt sich es nach oben 
 - Yaw Left: positive Rotation um die Y-Achse
+  -> Läuft man ins positive an der Y-Achse dreht man sich nach links
 - Yaw Right: negative Rotation um die Y-Achse

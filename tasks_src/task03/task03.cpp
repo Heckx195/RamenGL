@@ -28,6 +28,8 @@
 #include "../ramen/rgl_shader.h"
 #include "../ramen/rgl_utils.h"
 
+#include "./matrixStack.h"
+
 std::vector<Vertex> CreateCube(const Vec3f& color)
 {
     std::vector<Vertex> vertices;
@@ -215,8 +217,8 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
                 };
             };
 
-            Vec3f p00 = pos(phi0, theta0);  Vec3f p01 = pos(phi0, theta1); // Ring oben, links rechts
-            Vec3f p10 = pos(phi1, theta0);  Vec3f p11 = pos(phi1, theta1); // Ring unten, links rechts
+            Vec3f p00 = pos(phi0, theta0);  Vec3f p01 = pos(phi0, theta1); // Ring oben, rechts nach links
+            Vec3f p10 = pos(phi1, theta0);  Vec3f p11 = pos(phi1, theta1); // Ring unten, rechts nah links
 
             // UV: u = theta/(2pi), v = phi/pi -> Umrechnung in [0,1]^2
                 // theta / (2*pi) = Ein Wert zwischen 0.0 und 1.0 auf der U-Achse (links nach rechts).
@@ -267,7 +269,21 @@ std::vector<Vertex> CreateNormalLines(const std::vector<Vertex>& mesh, float sca
     return lines;
 }
 
-int main(int argc, char** argv)
+// Erzeugt eine Linie von Ursprung Richtung Y-Achse
+// Visualisiert Rotationsachse, um SelfRotation der Planeten zu zeigen.
+std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
+    std::vector<Vertex> lines;
+
+    // 60° von der Y-Achse geneigt (in XY-Ebene): sin(60°)=0.866, cos(60°)=0.5
+    Vec3f dir{ 0.866025f, 0.5f, 0.0f };
+    Vec3f color{1.0f, 0.0f, 1.0f};
+    lines.push_back({ Vec3f{0,0,0},                                  dir, color, Vec3f{0,0,0} });
+    lines.push_back({ Vec3f{dir.x*scale, dir.y*scale, dir.z*scale}, dir, color, Vec3f{0,0,0} });
+    return lines;
+}
+
+    int
+    main(int argc, char** argv)
 {
     Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
 
@@ -426,6 +442,138 @@ int main(int argc, char** argv)
     GLuint VBO_SphereNormals, VAO_SphereNormals;
     makeNormalVAO(VBO_SphereNormals, VAO_SphereNormals, sphereNormals);
 
+    // TODO: Aufgabe 3.7) Animation
+    // Sonne
+    std::vector<Vertex> sunVertices = CreateSphere(Vec3f{ 1.0f, 1.0f, 0.0f }); // Yellow sphere
+    GLuint              VBO_Sun;
+    glCreateBuffers(1, &VBO_Sun);
+    glNamedBufferData(VBO_Sun, sunVertices.size() * sizeof(Vertex), sunVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Sun;
+    glCreateVertexArrays(1, &VAO_Sun);
+    glVertexArrayVertexBuffer(VAO_Sun, 0, VBO_Sun, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Sun, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Sun, 0);
+    glVertexArrayAttribBinding(VAO_Sun, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Sun, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Sun, 1);
+    glVertexArrayAttribBinding(VAO_Sun, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Sun, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Sun, 2);
+    glVertexArrayAttribBinding(VAO_Sun, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Sun, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Sun, 3);
+    glVertexArrayAttribBinding(VAO_Sun, 3, 0);
+
+    // Visualisiere Rotationsachse des Planetens.
+    std::vector<Vertex> sunRotationAxis = CreateRotationAxis();
+    GLuint VBO_SunRotationAxis, VAO_SunRotationAxis;
+    makeNormalVAO(VBO_SunRotationAxis, VAO_SunRotationAxis, sunRotationAxis);
+
+    // Erde
+    std::vector<Vertex> earthVertices = CreateSphere(Vec3f{ 0.0f, 0.0f, 1.0f }); // Blue sphere
+    GLuint              VBO_Earth;
+    glCreateBuffers(1, &VBO_Earth);
+    glNamedBufferData(VBO_Earth, earthVertices.size() * sizeof(Vertex), earthVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Earth;
+    glCreateVertexArrays(1, &VAO_Earth);
+    glVertexArrayVertexBuffer(VAO_Earth, 0, VBO_Earth, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Earth, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Earth, 0);
+    glVertexArrayAttribBinding(VAO_Earth, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Earth, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Earth, 1);
+    glVertexArrayAttribBinding(VAO_Earth, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Earth, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Earth, 2);
+    glVertexArrayAttribBinding(VAO_Earth, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Earth, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Earth, 3);
+    glVertexArrayAttribBinding(VAO_Earth, 3, 0);
+
+    // Visualisiere Rotationsachse des Planetens.
+    std::vector<Vertex> earthRotationAxis = CreateRotationAxis();
+    GLuint VBO_EarthRotationAxis, VAO_EarthRotationAxis;
+    makeNormalVAO(VBO_EarthRotationAxis, VAO_EarthRotationAxis, earthRotationAxis);
+
+    // Mond
+    std::vector<Vertex> moonVertices = CreateSphere(Vec3f{ 0.5f, 0.5f, 0.5f }); // Gray sphere
+    GLuint              VBO_Moon;
+    glCreateBuffers(1, &VBO_Moon);
+    glNamedBufferData(VBO_Moon, moonVertices.size() * sizeof(Vertex), moonVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Moon;
+    glCreateVertexArrays(1, &VAO_Moon);
+    glVertexArrayVertexBuffer(VAO_Moon, 0, VBO_Moon, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Moon, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Moon, 0);
+    glVertexArrayAttribBinding(VAO_Moon, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Moon, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Moon, 1);
+    glVertexArrayAttribBinding(VAO_Moon, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Moon, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Moon, 2);
+    glVertexArrayAttribBinding(VAO_Moon, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Moon, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Moon, 3);
+    glVertexArrayAttribBinding(VAO_Moon, 3, 0);
+
+    // Visualisiere Rotationsachse des Planetens.
+    std::vector<Vertex> moonRotationAxis = CreateRotationAxis();
+    GLuint VBO_MoonRotationAxis, VAO_MoonRotationAxis;
+    makeNormalVAO(VBO_MoonRotationAxis, VAO_MoonRotationAxis, moonRotationAxis);
+
+    // Mars
+    std::vector<Vertex> marsVertices = CreateSphere(Vec3f{ 1.0f, 0.0f, 0.0f }); // Red sphere
+    GLuint              VBO_Mars;
+    glCreateBuffers(1, &VBO_Mars);
+    glNamedBufferData(VBO_Mars, marsVertices.size() * sizeof(Vertex), marsVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_Mars;
+    glCreateVertexArrays(1, &VAO_Mars);
+    glVertexArrayVertexBuffer(VAO_Mars, 0, VBO_Mars, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_Mars, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Mars, 0);
+    glVertexArrayAttribBinding(VAO_Mars, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Mars, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Mars, 1);
+    glVertexArrayAttribBinding(VAO_Mars, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Mars, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Mars, 2);
+    glVertexArrayAttribBinding(VAO_Mars, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_Mars, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Mars, 3);
+    glVertexArrayAttribBinding(VAO_Mars, 3, 0);
+
+    // Visualisiere Rotationsachse des Planetens.
+    std::vector<Vertex> marsRotationAxis = CreateRotationAxis();
+    GLuint VBO_MarsRotationAxis, VAO_MarsRotationAxis;
+    makeNormalVAO(VBO_MarsRotationAxis, VAO_MarsRotationAxis, marsRotationAxis);
+
+    // Variablen für Sonnensystem
+    float sunAngle = 0.0f;
+    float earthOrbitAngle = 0.0f;
+    float earthSelfAngle = 0.0f;
+    float moonAngle = 0.0f;
+    float marsAngle = 0.0f;
+
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -437,7 +585,16 @@ int main(int argc, char** argv)
     /* Main loop */
     bool isRunning = true;
     SDL_GL_SetSwapInterval(1); /* 1 = VSync enabled; 0 = VSync disabled */
+
+    Uint64 ticksPerSecond = SDL_GetPerformanceFrequency();
+    Uint64 startCounter   = SDL_GetPerformanceCounter();
+    Uint64 endCounter     = SDL_GetPerformanceCounter();
     while ( isRunning ) {
+        double ticksPerFrame = (double)endCounter - (double)startCounter;
+        double msPerFrame    = (ticksPerFrame / (double)ticksPerSecond) * 1000.0;
+        double deltaTime = ticksPerFrame / (double)ticksPerSecond; // in Sekunden
+        startCounter         = SDL_GetPerformanceCounter();
+
         SDL_Event e;
         while ( SDL_PollEvent(&e) ) {
             ImGui_ImplSDL3_ProcessEvent(&e);
@@ -531,9 +688,10 @@ int main(int argc, char** argv)
         // Beschreibt die Projektion, also wie die 3D-Szene auf den 2D-Bildschirm projiziert wird. (z.B. Perspektivische oder orthografische Projektion)
             // Sorgt, dass entfernte Objekte kleiner erscheinen, was einen realistischen 3D-Effekt erzeugt.
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
-        
+
+        // TODO: Aufgabe 3.5)
         // Lichtquelle in Weltkoordinaten
-        Vec3f lightPos{ 5.0f, 0.0f, -5.0f };
+        Vec3f lightPos{ 15.0f, 0.0f, 0.0f }; // 5.0f, 0.0f, -5.0f
         glUniform3fv(3, 1, lightPos.Data()); // als uniform in fragment-shader an pos3 packen
 
         glDrawArrays(GL_LINES, 0, 6);
@@ -569,9 +727,72 @@ int main(int argc, char** argv)
         glBindVertexArray(VAO_SphereNormals);
         glDrawArrays(GL_LINES, 0, (GLsizei)sphereNormals.size());
 
+        // TODO: Aufgabe 3.7) Animation -> Sonnnsystem
+        MatrixStack matrixStack = MatrixStack();
+        matrixStack.Translate(Vec3f{15.0f, 0.0f, 0.0f}); // Verschiebung des gesamten Sonnensystems nach rechts
+        matrixStack.Scale(Vec3f{0.4f, 0.4f, 0.4f}); // Basis-Skalierung für alle Modelle
+
+        sunAngle += 30.0f * deltaTime;
+        earthOrbitAngle += 10.0f * deltaTime;
+        earthSelfAngle += 5.0f * deltaTime;
+        moonAngle += 150.0f * deltaTime;
+        marsAngle += 8.0f * deltaTime;
+        
+        // Wichtig: Verständnis: Vertices erleben die Operationen von rechts nach links — also zuletzt hinzugefügt = zuerst angewendet
+        // Sonne
+        matrixStack.Push();
+        matrixStack.Rotate(RAMEN_WORLD_UP, sunAngle);
+        glUniformMatrix4fv(0, 1, GL_FALSE, matrixStack.Last().Data());
+        glBindVertexArray(VAO_Sun);
+        glDrawArrays(GL_TRIANGLES, 0, sunVertices.size());
+        // Rotationsachse
+        glBindVertexArray(VAO_SunRotationAxis);
+        glDrawArrays(GL_LINES, 0, (GLsizei)sunRotationAxis.size());
+
+        // Erde
+        matrixStack.Push();
+        matrixStack.Rotate(RAMEN_WORLD_UP, earthOrbitAngle);
+        matrixStack.Translate(Vec3f{4.0f, 0.0f, 0.0f});
+        matrixStack.Rotate(RAMEN_WORLD_UP, earthSelfAngle);
+        matrixStack.Scale(Vec3f{ 0.5f, 0.5f, 0.5f }); // Halb so groß wie Sonne
+        glUniformMatrix4fv(0, 1, GL_FALSE, matrixStack.Last().Data());
+        glBindVertexArray(VAO_Earth);
+        glDrawArrays(GL_TRIANGLES, 0, earthVertices.size());
+        // Rotationsachse
+        glBindVertexArray(VAO_EarthRotationAxis);
+        glDrawArrays(GL_LINES, 0, (GLsizei)earthRotationAxis.size());
+
+        // Mond
+        matrixStack.Push();
+        matrixStack.Rotate(RAMEN_WORLD_UP, moonAngle);
+        matrixStack.Translate(Vec3f{ 2.0f, 0.0f, 0.0f });
+        matrixStack.Scale(Vec3f{ 0.5f, 0.5f, 0.5f }); // Mond halb so groß wie Erde
+        glUniformMatrix4fv(0, 1, GL_FALSE, matrixStack.Last().Data());
+        glBindVertexArray(VAO_Moon);
+        glDrawArrays(GL_TRIANGLES, 0, moonVertices.size());
+        // Rotationsachse
+        glBindVertexArray(VAO_MoonRotationAxis);
+        glDrawArrays(GL_LINES, 0, (GLsizei)moonRotationAxis.size());
+
+        // Mars
+        matrixStack.Pop(); // Moon
+        matrixStack.Pop(); // Earth
+        matrixStack.Push(); // Ebene Sonne
+        matrixStack.Rotate(RAMEN_WORLD_UP, marsAngle);
+        matrixStack.Translate(Vec3f{ 8.0f, 0.0f, 0.0f });
+        matrixStack.Scale(Vec3f{ 0.25f, 0.25f, 0.25f }); // 1/4 so groß wie Sonne
+        glUniformMatrix4fv(0, 1, GL_FALSE, matrixStack.Last().Data());
+        glBindVertexArray(VAO_Mars);
+        glDrawArrays(GL_TRIANGLES, 0, marsVertices.size());
+        // Rotationsachse
+        glBindVertexArray(VAO_MarsRotationAxis);
+        glDrawArrays(GL_LINES, 0, (GLsizei)marsRotationAxis.size());
+
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         pRamen->EndFrame();
         SDL_GL_SwapWindow(pRamen->GetWindow());
+
+        endCounter = SDL_GetPerformanceCounter();
     }
 
     /* GL Resources shutdown. */
