@@ -47,7 +47,7 @@ die Erkenntnisse in Ihre Dokumentation mit auf.
 
 ## 4.3) Zugänglich machen der Texturkoordinaten im Shader
 'Verdrahten' Sie nun das Texturkoordinaten-Attribut über das VAO
-mit dem Vertex-Shader, sodass die Texturkoordinaten im in diesem verfügbar werden. Ermöglichen Sie ausserdem
+mit dem Vertex-Shader, sodass die Texturkoordinaten in diesem verfügbar werden. Ermöglichen Sie ausserdem
 die Weiterleitung der Texturkoordinaten aus dem Vertex- in den Fragment-Shader.
 
 ## 4.4) Samplen der OpenGL Textur im Fragment-Shader

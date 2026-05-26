@@ -223,10 +223,11 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
             // UV: u = theta/(2pi), v = phi/pi -> Umrechnung in [0,1]^2
                 // theta / (2*pi) = Ein Wert zwischen 0.0 und 1.0 auf der U-Achse (links nach rechts).
                 // phi / pi = Ein Wert zwischen 0.0 und 1.0 auf der V-Achse (oben nach unten).
-            Vec3f uv00{ theta0/(2*pi), phi0/pi, 0.f };
-            Vec3f uv01{ theta1/(2*pi), phi0/pi, 0.f };
-            Vec3f uv10{ theta0/(2*pi), phi1/pi, 0.f };
-            Vec3f uv11{ theta1/(2*pi), phi1/pi, 0.f };
+            // 1.0f - phi0 / pi, 0.f -> sodass uv-Koordinaten (0, 0) oben links und (1, 1) unten rechts
+            Vec3f uv00{ theta0 / (2 * pi), 1.0f - phi0 / pi, 0.f };
+            Vec3f uv01{ theta1 / (2 * pi), 1.0f - phi0 / pi, 0.f };
+            Vec3f uv10{ theta0 / (2 * pi), 1.0f - phi1 / pi, 0.f };
+            Vec3f uv11{ theta1 / (2 * pi), 1.0f - phi1 / pi, 0.f };
 
             // Auf einer Einheitskugel ist die Normalenrichtung gleich der Position,
                 // da die Normalenvektoren von der Mitte der Kugel nach außen zeigen
