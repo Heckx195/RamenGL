@@ -6,9 +6,8 @@ layout(location = 2) in vec3 in_Color;
 layout(location = 3) in vec3 in_UV;
 
 layout(location = 0) out vec3 out_Normal;
-layout(location = 1) out vec3 out_ViewSpacePos;
-layout(location = 2) out vec3 out_Color;
-layout(location = 3) out vec3 out_UV;
+layout(location = 1) out vec3 out_Color;
+layout(location = 2) out vec3 out_UV;
 
 /* NOTE:
    One could use 'glGetUniformLocation' on CPU-side instead

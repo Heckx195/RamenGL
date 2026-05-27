@@ -189,10 +189,10 @@ int main(int argc, char** argv)
     );
 
     // TODO: Aufgabe 4.5) Texturkoordinaten für Kugel erstellen
-    std::vector<Vertex> sphereVertices = CreateSphere(Vec3f{ 0.0f, 0.0f, 1.0f }); // Blue sphere
+    std::vector<Vertex> earthVertices = CreateSphere(Vec3f{ 0.0f, 0.0f, 1.0f }); // Blue sphere
     GLuint              VBO_Earth;
     glCreateBuffers(1, &VBO_Earth);
-    glNamedBufferData(VBO_Earth, sphereVertices.size() * sizeof(Vertex), sphereVertices.data(), GL_STATIC_DRAW);
+    glNamedBufferData(VBO_Earth, earthVertices.size() * sizeof(Vertex), earthVertices.data(), GL_STATIC_DRAW);
 
     GLuint VAO_Earth;
     glCreateVertexArrays(1, &VAO_Earth);
@@ -337,7 +337,7 @@ int main(int argc, char** argv)
         glUniformMatrix4fv(0, 1, GL_FALSE, earthModelMat.Data());
         glBindVertexArray(VAO_Earth);
         glBindTextureUnit(0, textureHandleEarth);
-        glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
+        glDrawArrays(GL_TRIANGLES, 0, earthVertices.size());
 
 
         SDL_GL_SwapWindow(pRamen->GetWindow());

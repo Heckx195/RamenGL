@@ -20,9 +20,115 @@
 #include "../ramen/rgl_model.h"
 #include "../ramen/rgl_shader.h"
 
+// Creates a cube with frontfaces inside of the cube.
+std::vector<Vertex> CreateSkyboxCube(const Vec3f& color)
+{
+    std::vector<Vertex> vertices;
+    
+    // Define the 8 corners of the cube
+        // symmetrisch um den Ursprung.
+    Vec3f corners[8] = {
+        Vec3f{-1.f, -1.f, -1.f},
+        Vec3f{ 1.f, -1.f, -1.f},
+        Vec3f{ 1.f,  1.f, -1.f},
+        Vec3f{-1.f,  1.f, -1.f},
+        Vec3f{-1.f, -1.f,  1.f},
+        Vec3f{ 1.f, -1.f,  1.f},
+        Vec3f{ 1.f,  1.f,  1.f},
+        Vec3f{-1.f,  1.f,  1.f}
+    };
+    
+    // Helper to add quad: 2 Dreiecke (6 Vertices)
+    auto pushQuad = [&](Vec3f a, Vec3f b, Vec3f c, Vec3f d,
+                        Vec3f n,
+                        Vec3f uva, Vec3f uvb, Vec3f uvc, Vec3f uvd) {
+        // Dreieck 1: a, b, c -> von innen ccw
+        vertices.push_back({a, n, color, uva});
+        vertices.push_back({b, n, color, uvb});
+        vertices.push_back({c, n, color, uvc});
+        // Dreieck 2: a, c, d -> von innen ccw
+        vertices.push_back({a, n, color, uva});
+        vertices.push_back({c, n, color, uvc});
+        vertices.push_back({d, n, color, uvd});
+    };
+
+    // CCW von außen der Würfeloberfläche sichtbare Dreiecksnetz definieren
+    // Front face (z = -1)
+    pushQuad(corners[0], corners[1], corners[2], corners[3],
+            Vec3f{0,0,-1},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Back face (z = +1)
+    pushQuad(corners[4], corners[7], corners[6], corners[5],
+            Vec3f{0,0,1},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Left face (x = -1)
+    pushQuad(corners[0], corners[3], corners[7], corners[4],
+            Vec3f{-1,0,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Right face (x = +1)
+    pushQuad(corners[1], corners[5], corners[6], corners[2],
+            Vec3f{1,0,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Bottom face (y = -1)
+    pushQuad(corners[0], corners[4], corners[5], corners[1],
+            Vec3f{0,-1,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+
+    // Top face (y = +1)
+    pushQuad(corners[3], corners[2], corners[6], corners[7],
+            Vec3f{0,1,0},
+            Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
+    
+    return vertices;
+}
+
+// Erzeugt Liniensegmente zur Visualisierung der Normalenvektoren.
+std::vector<Vertex> CreateNormalLines(const std::vector<Vertex>& mesh, float scale = 0.2f)
+{
+    std::vector<Vertex> lines;
+
+    // Pro Vertex wird eine Linie von der Position zur Position + Normale * scale erzeugt.
+    for (const Vertex& v : mesh)
+    {
+        // Die Farbe der Linie wird aus der Normalenrichtung berechnet: Mapping von [-1,1] auf [0,1].
+        Vec3f color{
+            v.normal.x * 0.5f + 0.5f, // *0.5f + 0.5f -> Verschiebung des RGB-Werts von [-1,1] auf [0,1]
+            v.normal.y * 0.5f + 0.5f,
+            v.normal.z * 0.5f + 0.5f
+        };
+        lines.push_back({ v.position, v.normal, color, Vec3f{0,0,0} });
+        lines.push_back({
+            Vec3f{ v.position.x + v.normal.x * scale, // position -> Ankerpunkt
+                   v.position.y + v.normal.y * scale,
+                   v.position.z + v.normal.z * scale },
+            v.normal, color, Vec3f{0,0,0}
+        });
+    }
+    return lines;
+}
+
+// Normal visualization: Liniensegmente für jeden Mesh
+    auto makeNormalVAO = [](GLuint& vbo, GLuint& vao, const std::vector<Vertex>& lines)
+    {
+        glCreateBuffers(1, &vbo);
+        glNamedBufferData(vbo, lines.size() * sizeof(Vertex), lines.data(), GL_STATIC_DRAW);
+        glCreateVertexArrays(1, &vao);
+        glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
+        glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
+        glEnableVertexArrayAttrib(vao, 0);
+        glVertexArrayAttribBinding(vao, 0, 0);
+        glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+        glEnableVertexArrayAttrib(vao, 2);
+        glVertexArrayAttribBinding(vao, 2, 0);
+    };
+
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv);
+    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("Task 05 - Cubemapping", 800, 600);
@@ -35,14 +141,41 @@ int main(int argc, char** argv)
     }
 
     /* Create camera */
-    Camera camera(Vec3f{ 0.0f, 0.0f, 5.0f });
+    Camera camera(Vec3f{ 0.0f, 2.0f, 5.0f });
     camera.RotateAroundSide(0.0f);
 
     /* Model mat*/
     Mat4f modelMat = Mat4f::Identity();
 
-    GLuint VAO;
-    glCreateVertexArrays(1, &VAO);
+    // TODO: Aufgabe 5.1) Cubemap erstellen
+    std::vector<Vertex> skyboxVertices = CreateSkyboxCube(Vec3f{1.0f, 0.0f, 0.0f});
+    GLuint VBO_SkyboxCube;
+    glCreateBuffers(1, &VBO_SkyboxCube);
+    glNamedBufferData(VBO_SkyboxCube, skyboxVertices.size() * sizeof(Vertex), skyboxVertices.data(), GL_STATIC_DRAW);
+
+    GLuint VAO_SkyboxCube;
+    glCreateVertexArrays(1, &VAO_SkyboxCube);
+    glVertexArrayVertexBuffer(VAO_SkyboxCube, 0, VBO_SkyboxCube, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_SkyboxCube, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_SkyboxCube, 0);
+    glVertexArrayAttribBinding(VAO_SkyboxCube, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_SkyboxCube, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_SkyboxCube, 1);
+    glVertexArrayAttribBinding(VAO_SkyboxCube, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_SkyboxCube, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_SkyboxCube, 2);
+    glVertexArrayAttribBinding(VAO_SkyboxCube, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_SkyboxCube, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_SkyboxCube, 3);
+    glVertexArrayAttribBinding(VAO_SkyboxCube, 3, 0);
+
+    std::vector<Vertex> cubeNormals     = CreateNormalLines(skyboxVertices);
+    GLuint VBO_CubeNormals, VAO_CubeNormals;
+    makeNormalVAO(VBO_CubeNormals, VAO_CubeNormals, cubeNormals);
 
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
@@ -92,6 +225,45 @@ int main(int argc, char** argv)
             }
         }
 
+        {
+            const float rotateStep = 1.5f;  /* degrees per frame */
+            const float moveStep   = 0.05f; /* units per frame   */
+
+            /* Camera movement - Rotation */
+            if ( pRamen->KeyWentDown(SDLK_UP) || pRamen->KeyPressed(SDLK_UP) )
+                /* TODO: Pitch up camera */
+                camera.Pitch(rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_DOWN) || pRamen->KeyPressed(SDLK_DOWN) )
+                /* TODO: Pitch down camera */
+                camera.Pitch(-rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_LEFT) || pRamen->KeyPressed(SDLK_LEFT) )
+                /* TODO: Yaw left camera */
+                camera.Yaw(rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_RIGHT) || pRamen->KeyPressed(SDLK_RIGHT) )
+                /* TODO: Yaw right camera */
+                camera.Yaw(-rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_E) || pRamen->KeyPressed(SDLK_E) )
+                /* TODO: Roll right camera */
+                camera.Roll(rotateStep);
+            else if ( pRamen->KeyWentDown(SDLK_Q) || pRamen->KeyPressed(SDLK_Q) )
+                /* TODO: Roll left camera */
+                camera.Roll(-rotateStep);
+
+            /* Camera movement - Translation */
+            else if ( pRamen->KeyWentDown(SDLK_W) || pRamen->KeyPressed(SDLK_W) )
+                /* TODO: Move camera forward */
+                camera.DollyForward(moveStep);
+            else if ( pRamen->KeyWentDown(SDLK_S) || pRamen->KeyPressed(SDLK_S) )
+                /* TODO: Move camera backward */
+                camera.DollyForward(-moveStep);
+            else if ( pRamen->KeyWentDown(SDLK_A) || pRamen->KeyPressed(SDLK_A) )
+                /* TODO: Move camera left */
+                camera.DollySide(-moveStep);
+            else if ( pRamen->KeyWentDown(SDLK_D) || pRamen->KeyPressed(SDLK_D) )
+                /* TODO: Move camera right */
+                camera.DollySide(moveStep);
+        }
+
         /* Query new frame dimensions */
         int windowWidth, windowHeight;
         SDL_GetWindowSize(pRamen->GetWindow(), &windowWidth, &windowHeight);
@@ -126,10 +298,15 @@ int main(int argc, char** argv)
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
         shader.Use();
-        glBindVertexArray(VAO);
         glUniformMatrix4fv(0, 1, GL_FALSE, modelMat.Data());
         glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
+        
+        glBindVertexArray(VAO_SkyboxCube);
+        glDrawArrays(GL_TRIANGLES, 0, skyboxVertices.size());
+
+        glBindVertexArray(VAO_CubeNormals);
+        glDrawArrays(GL_LINES, 0, (GLsizei)cubeNormals.size());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -140,7 +317,7 @@ int main(int argc, char** argv)
 
     /* GL Resources shutdown. */
     shader.Delete();
-    glDeleteVertexArrays(1, &VAO);
+    glDeleteVertexArrays(1, &VAO_SkyboxCube);
 
     /* Ramen Shutdown */
     pRamen->Shutdown();
