@@ -33,6 +33,10 @@ add_executable(task05
 
     ./task05.cpp
 )
+set_target_properties(task05 PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+)
 
 set_target_properties(task05 PROPERTIES
     BUILD_RPATH "$ORIGIN"
