@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stb_image.h>
 
 #include <vector>
 
@@ -112,19 +113,79 @@ std::vector<Vertex> CreateNormalLines(const std::vector<Vertex>& mesh, float sca
 }
 
 // Normal visualization: Liniensegmente für jeden Mesh
-    auto makeNormalVAO = [](GLuint& vbo, GLuint& vao, const std::vector<Vertex>& lines)
+auto makeNormalVAO = [](GLuint& vbo, GLuint& vao, const std::vector<Vertex>& lines)
+{
+    glCreateBuffers(1, &vbo);
+    glNamedBufferData(vbo, lines.size() * sizeof(Vertex), lines.data(), GL_STATIC_DRAW);
+    glCreateVertexArrays(1, &vao);
+    glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
+    glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(vao, 0);
+    glVertexArrayAttribBinding(vao, 0, 0);
+    glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(vao, 2);
+    glVertexArrayAttribBinding(vao, 2, 0);
+};
+
+// Von https://learnopengl.com/Advanced-OpenGL/Cubemaps
+// aber auf neuste OpenGL Funktionen aktualisiert.
+void loadCubemap(
+    GLuint& textureID,
+    const std::vector<std::string>& faces
+) {
+    
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &textureID);
+
+    int width, height, nrChannels;
+    bool storageAllocated = false;
+
+    for (unsigned int i = 0; i < faces.size(); i++)
     {
-        glCreateBuffers(1, &vbo);
-        glNamedBufferData(vbo, lines.size() * sizeof(Vertex), lines.data(), GL_STATIC_DRAW);
-        glCreateVertexArrays(1, &vao);
-        glVertexArrayVertexBuffer(vao, 0, vbo, 0, sizeof(Vertex));
-        glVertexArrayAttribFormat(vao, 0, 3, GL_FLOAT, GL_FALSE, 0);
-        glEnableVertexArrayAttrib(vao, 0);
-        glVertexArrayAttribBinding(vao, 0, 0);
-        glVertexArrayAttribFormat(vao, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
-        glEnableVertexArrayAttrib(vao, 2);
-        glVertexArrayAttribBinding(vao, 2, 0);
-    };
+        File imgFile = Filesystem::Instance()->Read(faces[i].c_str());
+        unsigned char* data = stbi_load_from_memory((unsigned char*)imgFile.data, imgFile.m_size, &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            if (!storageAllocated)
+            {
+                // Nur einmal Speicher für die gesamte Cubemap allokieren. Möglich weil alle 6 Seiten gleich groß sind.
+                glTextureStorage2D(textureID, 1, GL_RGB8, width, height);
+                storageAllocated = true;
+            }
+            // i = Face-Index
+                // i=0 -> GL_TEXTURE_CUBE_MAP_POSITIVE_X
+                // i=1 -> GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+                // i=2 -> GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+                // i=3 -> GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+                // i=4 -> GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+                // i=5 -> GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+            glTextureSubImage3D(
+                textureID,
+                0, // level
+                0, 0, // xoffset, yoffset
+                i, // zoffset = Face-Index
+                width,
+                height,
+                1,
+                GL_RGB,
+                GL_UNSIGNED_BYTE,
+                data
+            );
+            stbi_image_free(data); // Garbage collect.
+        }
+        else
+        {
+            fprintf(stderr, "Cubemap tex failed to load at path: %s\n", faces[i].c_str());
+            stbi_image_free(data); // Kein Memory-Leak hehe.
+        }
+    }
+
+    // -> Siehe Doku.
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+}
 
 int main(int argc, char** argv)
 {
@@ -141,7 +202,7 @@ int main(int argc, char** argv)
     }
 
     /* Create camera */
-    Camera camera(Vec3f{ 0.0f, 2.0f, 5.0f });
+    Camera camera(Vec3f{ 0.0f, 0.0f, 0.0f }); // inside cube.
     camera.RotateAroundSide(0.0f);
 
     /* Model mat*/
@@ -176,6 +237,21 @@ int main(int argc, char** argv)
     std::vector<Vertex> cubeNormals     = CreateNormalLines(skyboxVertices);
     GLuint VBO_CubeNormals, VAO_CubeNormals;
     makeNormalVAO(VBO_CubeNormals, VAO_CubeNormals, cubeNormals);
+
+    // TODO: Aufgabe 5.1.1
+    GLuint textureHandleCubemap;
+    std::string prefix = "textures/cubemaps/Colosseum/";
+    loadCubemap(
+        textureHandleCubemap,
+        std::vector<std::string>{
+            prefix + "posx.jpg",
+            prefix + "negx.jpg",
+            prefix + "posy.jpg",
+            prefix + "negy.jpg",
+            prefix + "posz.jpg",
+            prefix + "negz.jpg"
+        }
+    );
 
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
@@ -225,6 +301,7 @@ int main(int argc, char** argv)
             }
         }
 
+        // TODO: Aufgabe 5.1.3) Kamera
         {
             const float rotateStep = 1.5f;  /* degrees per frame */
             const float moveStep   = 0.05f; /* units per frame   */
@@ -303,6 +380,7 @@ int main(int argc, char** argv)
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
         
         glBindVertexArray(VAO_SkyboxCube);
+        glBindTextureUnit(0, textureHandleCubemap);
         glDrawArrays(GL_TRIANGLES, 0, skyboxVertices.size());
 
         glBindVertexArray(VAO_CubeNormals);
@@ -318,6 +396,8 @@ int main(int argc, char** argv)
     /* GL Resources shutdown. */
     shader.Delete();
     glDeleteVertexArrays(1, &VAO_SkyboxCube);
+    glDeleteVertexArrays(1, &VAO_CubeNormals);
+    glDeleteTextures(1, &textureHandleCubemap);
 
     /* Ramen Shutdown */
     pRamen->Shutdown();

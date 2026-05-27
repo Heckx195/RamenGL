@@ -350,6 +350,9 @@ int main(int argc, char** argv)
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
     glDeleteVertexArrays(1, &VAO_Quad);
+    glDeleteBuffers(1, &VBO_Earth);
+    glDeleteVertexArrays(1, &VAO_Earth);
+    glDeleteTextures(1, &textureHandleEarth);
 
     /* Ramen Shutdown */
     pRamen->Shutdown();

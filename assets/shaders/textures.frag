@@ -12,6 +12,6 @@ layout(binding = 0) uniform sampler2D u_Texture;
 
 void main()
 {
-    vec4 texColor = texture(u_Texture, in_UV.st);
+    vec4 texColor = texture(u_Texture, in_UV.st); // s, t Koordinaten
     outColor = texColor;
 }
