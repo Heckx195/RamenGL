@@ -301,6 +301,10 @@ int main(int argc, char** argv)
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
 
+    /* Debug toggles */
+    bool useDepthMask    = true;
+    bool useSkyboxViewMat = true;
+
     /* Main loop */
     bool isRunning = true;
     SDL_GL_SetSwapInterval(1); /* 1 = VSync enabled; 0 = VSync disabled */
@@ -406,7 +410,8 @@ int main(int argc, char** argv)
 
         ImGui::Begin("Cubemap settings");
 
-        /* TODO: Implement your own UI here. */
+        ImGui::Checkbox("glDepthMask(GL_FALSE) fuer Skybox", &useDepthMask);
+        ImGui::Checkbox("Skybox View Matrix (Translation entfernen)", &useSkyboxViewMat);
 
         ImGui::End();
 
@@ -417,15 +422,28 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
 
+        if (useDepthMask)
+            glDepthMask(GL_FALSE);
+
+        Mat4f skyboxViewMat = viewMat;
+        if (useSkyboxViewMat)
+        {
+            skyboxViewMat[3][0] = 0.0f;
+            skyboxViewMat[3][1] = 0.0f;
+            skyboxViewMat[3][2] = 0.0f;
+        }
+        
         shader.Use();
         glUniformMatrix4fv(0, 1, GL_FALSE, modelMat.Data());
-        glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
+        glUniformMatrix4fv(1, 1, GL_FALSE, skyboxViewMat.Data());
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
         
         glBindVertexArray(VAO_SkyboxCube);
         glBindTextureUnit(0, textureHandleCubemap);
         glDrawArrays(GL_TRIANGLES, 0, skyboxVertices.size());
 
+        if (useDepthMask)
+            glDepthMask(GL_TRUE);
         glBindVertexArray(VAO_CubeNormals);
         glDrawArrays(GL_LINES, 0, (GLsizei)cubeNormals.size());
 
