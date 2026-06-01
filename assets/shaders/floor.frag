@@ -31,7 +31,7 @@ void main()
         vec3 projCoords = in_LightSpacePos.xyz / in_LightSpacePos.w;  // NDC
         projCoords = projCoords * 0.5 + 0.5;
 
-        if (projCoords.z <= 1.0) {
+        if (projCoords.z <= 1.0) { // Ist Fragement im Frustum der LightCamera dann <=1.0
             // ShadowMap sampeln
             vec4 sampleShadowMap = texture(u_ShadowMap, projCoords.xy); // return vec4 {r,g,b,a}
                 // Sample mit xy-Wert des transformierten Fragment-Coords den Tiefenwert

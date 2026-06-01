@@ -373,7 +373,7 @@ int main(int argc, char** argv)
     glNamedFramebufferTexture(FBO_Shadowmap, GL_DEPTH_ATTACHMENT, textureHandleShadowMap, 0); /* 0 = mipmap level */
 
     // TODO: Aufgabe 6.2) Kugel um Lichtquelle zu visualieren.
-    std::vector<Vertex> lightSphereVertices = CreateSphere(Vec3f{1.0f, 0.0f, 0.0f});
+    std::vector<Vertex> lightSphereVertices = CreateSphere(Vec3f{ 1.0f, 1.0f, 0.0f });
     GLuint VBO_LightSphere;
     glCreateBuffers(1, &VBO_LightSphere);
     glNamedBufferData(VBO_LightSphere, lightSphereVertices.size() * sizeof(Vertex), lightSphereVertices.data(), GL_STATIC_DRAW);
@@ -540,10 +540,10 @@ int main(int argc, char** argv)
                 camera.Pitch(-rotateStep);
             else if ( pRamen->KeyWentDown(SDLK_LEFT) || pRamen->KeyPressed(SDLK_LEFT) )
                 /* TODO: Yaw left camera */
-                camera.Yaw(rotateStep);
+                camera.RotateAroundWorldUp(rotateStep);
             else if ( pRamen->KeyWentDown(SDLK_RIGHT) || pRamen->KeyPressed(SDLK_RIGHT) )
                 /* TODO: Yaw right camera */
-                camera.Yaw(-rotateStep);
+                camera.RotateAroundWorldUp(-rotateStep);
             else if ( pRamen->KeyWentDown(SDLK_E) || pRamen->KeyPressed(SDLK_E) )
                 /* TODO: Roll right camera */
                 camera.Roll(rotateStep);

@@ -283,8 +283,7 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
     return lines;
 }
 
-    int
-    main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
 
@@ -296,6 +295,12 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
     if ( !shader.Load("shaders/task03.vert", "shaders/task03.frag") )
     {
         fprintf(stderr, "Could not load shader.\n");
+    }
+
+    Shader lightSourceShader{};
+    if ( !lightSourceShader.Load("shaders/lightSource.vert", "shaders/lightSource.frag") )
+    {
+        fprintf(stderr, "Could not load light source shader.\n");
     }
 
     /* Create camera */
@@ -675,7 +680,7 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
 
         /* Rendering */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.1f, 0.1f, 0.2f, 1.0f);
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
 
         shader.Use();
         glBindVertexArray(VAO_Coord);
@@ -740,7 +745,11 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
         marsAngle += 8.0f * deltaTime;
         
         // Wichtig: Verständnis: Vertices erleben die Operationen von rechts nach links — also zuletzt hinzugefügt = zuerst angewendet
-        // Sonne
+        // Sonne — eigener Shader ohne Beleuchtung
+        lightSourceShader.Use();
+        glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
+        glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
+
         matrixStack.Push();
         matrixStack.Rotate(RAMEN_WORLD_UP, sunAngle);
         glUniformMatrix4fv(0, 1, GL_FALSE, matrixStack.Last().Data());
@@ -749,6 +758,12 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
         // Rotationsachse
         glBindVertexArray(VAO_SunRotationAxis);
         glDrawArrays(GL_LINES, 0, (GLsizei)sunRotationAxis.size());
+
+        // Zurück zum Haupt-Shader für alle anderen Objekte
+        shader.Use();
+        glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
+        glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
+        glUniform3fv(3, 1, lightPos.Data());
 
         // Erde
         matrixStack.Push();
