@@ -483,6 +483,8 @@ int main(int argc, char** argv)
     bool useSkyboxViewMat = true;
     bool useShadow = true;
     bool useFloorTexture = true;
+    bool useBias = false;
+    float biasAmount = 0.0001f;
 
     /* Main loop */
     bool isRunning = true;
@@ -598,6 +600,9 @@ int main(int argc, char** argv)
         ImGui::Checkbox("Skybox fest an Kamera (Skybox View Matrix - Translation entfernen)", &useSkyboxViewMat);
         ImGui::Checkbox("Aktiviere Schatten", &useShadow);
         ImGui::Checkbox("Aktiviere Textur für Boden", &useFloorTexture);
+        ImGui::Checkbox("Aktiviere Bias (verhindert Shadow Acne)", &useBias);
+        if (useBias)
+            ImGui::DragFloat("Bias-Wert (0.0001=gut, >0.001=Peter Panning)", &biasAmount, 0.000001f, 0.0f, 0.01f, "%.6f");
         ImGui::DragFloat3("Lichtposition", lightPos.Data(), 0.1f);
 
         ImGui::End();
@@ -636,7 +641,7 @@ int main(int argc, char** argv)
             glBindTextureUnit(0, textureHandleCubemap);
             glDrawArrays(GL_TRIANGLES, 0, model.NumVertices());
 
-            Mat4f sphereModelMat = modelMat * Translate(Vec3f{-2.0f, 0.5f, 0.0f}); // Kugel über dem Boden
+            Mat4f sphereModelMat = modelMat * Translate(Vec3f{-3.0f, 0.0f, 0.0f});
             glUniformMatrix4fv(0, 1, GL_FALSE, sphereModelMat.Data());
             glBindVertexArray(VAO_Sphere);
             glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
@@ -690,11 +695,12 @@ int main(int argc, char** argv)
         glBindTextureUnit(1, textureHandleShadowMap);
         glUniform1i(5, useShadow ? 1 : 0); // Setzt bool in fragment-shader
         glUniform1i(6, useFloorTexture ? 1 : 0); // Setzt bool in fragment-shader
+        glUniform1f(7, useBias ? biasAmount : 0.0f); // Setzt bias-Wert in fragment-shader
         glDrawElementsBaseVertex(GL_TRIANGLES, NUM_QUAD_INDICES, GL_UNSIGNED_SHORT, 0, 0);
 
         // Kugel: weiß + Shadow Acne sichtbar (kein Bias in floor.frag)
         floorShader.Use();
-        Mat4f sphereModelMat = modelMat * Translate(Vec3f{-2.0f, 0.5f, 0.0f});
+        Mat4f sphereModelMat = modelMat * Translate(Vec3f{-3.0f, 0.0f, 0.0f});
         glUniformMatrix4fv(0, 1, GL_FALSE, sphereModelMat.Data());
         glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
@@ -704,6 +710,7 @@ int main(int argc, char** argv)
         glBindTextureUnit(1, textureHandleShadowMap);  // binding 1 = Shadow Map
         glUniform1i(5, useShadow ? 1 : 0);  // u_UseShadow
         glUniform1i(6, 0);                   // u_UseTexture = false → weiß
+        glUniform1f(7, useBias ? biasAmount : 0.0f); // u_BiasAmount
         glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
 
         flatShader.Use();

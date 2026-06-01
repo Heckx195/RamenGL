@@ -10,6 +10,7 @@ layout(binding = 0) uniform sampler2D u_Texture;
 layout(binding = 1) uniform sampler2D u_ShadowMap;
 layout(location = 5) uniform bool u_UseShadow;
 layout(location = 6) uniform bool u_UseTexture;
+layout(location = 7) uniform float u_BiasAmount;
 
 
 void main()
@@ -19,7 +20,7 @@ void main()
         texColor = texture(u_Texture, in_UV.st);
             // Sampelt über UV (in_UV) die korrekten Farbwerte an dem Punkt in der Textur
             // u_Texture ist der texture unit, die in der Main auf "0" gebindet wurde
-        
+
         // vec4 reflectColor = reflect(I, N) //
             // I=Incident: Vektor von der Kamera zur Oberfläche (der eintreffende Sichtstrahl)
             // N=Normal: Oberflächennormale des Modells (zeigt vom Objekt weg)
@@ -40,7 +41,7 @@ void main()
                 //  deshalb mit .r diesen extrahieren
 
             float currentDepth = projCoords.z; // Depth-Wert aus normalen Rendern.
-            shadow = currentDepth > closetDepth ? 1.0 : 0.0;
+            shadow = (currentDepth - u_BiasAmount) > closetDepth ? 1.0 : 0.0;
         }
     }
 
