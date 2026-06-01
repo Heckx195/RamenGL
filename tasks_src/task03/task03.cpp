@@ -695,7 +695,7 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
         Vec3f lightPos{ 15.0f, 0.0f, 0.0f }; // 5.0f, 0.0f, -5.0f
         glUniform3fv(3, 1, lightPos.Data()); // als uniform in fragment-shader an pos3 packen
 
-        glDrawArrays(GL_LINES, 0, 6);
+        glDrawArrays(GL_LINES, 0, 6); // Zeichne die Weltkoordinatenachsen (6 Vertices = 3 Linien für die Koordinatenachsen)
         // GL_Lines = Zeichenmodus; jedes Paar von Vertices wird als Linie interpretiert. (6 Vertices = 3 Linien für die Koordinatenachsen)
 
         // Basis-Transformation für alle Modelle: Skalierung, damit sie nicht zu groß sind.

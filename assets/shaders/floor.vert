@@ -5,9 +5,6 @@ layout(location = 1) in vec3 in_Normal;
 layout(location = 2) in vec3 in_Color;
 layout(location = 3) in vec3 in_UV;
 
-layout(location = 0) out vec3 out_Color;
-layout(location = 1) out vec3 out_TexelPos;
-
 /* NOTE:
    One could use 'glGetUniformLocation' on CPU-side instead
    of fixed location = ... qualifiers.
@@ -17,11 +14,16 @@ layout(location = 1) out vec3 out_TexelPos;
 layout(location = 0) uniform mat4 u_ModelMat;
 layout(location = 1) uniform mat4 u_ViewMat;
 layout(location = 2) uniform mat4 u_ProjMat;
+layout(location = 3) uniform mat4 u_LightViewMat;
+layout(location = 4) uniform mat4 u_LightProjMat;
+
+layout(location = 0) out vec3 out_UV;
+layout(location = 1) out vec4 out_LightSpacePos;
 
 void main()
 {
    vec4 position = u_ProjMat * u_ViewMat * u_ModelMat * vec4(in_Position, 1.0f);
    gl_Position = position;
-   out_Color = in_Color;
-   out_TexelPos = in_Position; // Richtungsvektor vom Texel.
+   out_UV = in_UV;
+   out_LightSpacePos = u_LightProjMat * u_LightViewMat * u_ModelMat * vec4(in_Position, 1.0f);
 }

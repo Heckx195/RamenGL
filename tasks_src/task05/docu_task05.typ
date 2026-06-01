@@ -91,3 +91,15 @@ glTextureParameteri(textureHandle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 - Mag-Filter -> Definiert die Filtermethode, die verwendet wird, wenn die Textur vergrößert dargestellt wird (d.h. wenn ein Texel auf mehrere Pixel abgebildet wird). GL_NEAREST sorgt dafür, dass der nächstgelegene Texel-Wert verwendet wird.
 
 #line(length: 100%)
+
+== 5.3) FPS Camera
+Ändern Sie nun das Verhalten der Cubemap so,
+dass Sie diese nicht mehr verlassen können! Dies soll den Eindruck
+eines unendlich entfernt liegenden Horizonts simulieren, wie
+es auch in vielen Videospielen der Fall ist. 
+
+```c
+glDepthMask(GL_FALSE);
+```
+
+- Deaktiviert das Schreiben in den Tiefenpuffer. Dadurch wird verhindert, dass die Cubemap-Geometrie die Tiefeninformationen überschreibt, was wichtig ist, um sicherzustellen, dass andere Objekte korrekt *vor* der Cubemap gerendert werden können.

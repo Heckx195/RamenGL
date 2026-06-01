@@ -216,29 +216,29 @@ int main(int argc, char** argv)
     }
     
     // TODO: Create a buffer on GPU and upload the model's vertices.
-    GLuint VBO_NvidiaKnight;
-    glCreateBuffers(1, &VBO_NvidiaKnight);
-    glNamedBufferData(VBO_NvidiaKnight, model.NumVertices() * sizeof(Vertex), model.GetVertices().data(), GL_STATIC_DRAW);
+    GLuint VBO_Model;
+    glCreateBuffers(1, &VBO_Model);
+    glNamedBufferData(VBO_Model, model.NumVertices() * sizeof(Vertex), model.GetVertices().data(), GL_STATIC_DRAW);
     
-    GLuint VAO_NvidiaKnight;
-    glCreateVertexArrays(1, &VAO_NvidiaKnight);
-    glVertexArrayVertexBuffer(VAO_NvidiaKnight, 0, VBO_NvidiaKnight, 0, sizeof(Vertex));
+    GLuint VAO_Model;
+    glCreateVertexArrays(1, &VAO_Model);
+    glVertexArrayVertexBuffer(VAO_Model, 0, VBO_Model, 0, sizeof(Vertex));
     /* Position */ // Position is at offset 0
-    glVertexArrayAttribFormat(VAO_NvidiaKnight, 0, 3, GL_FLOAT, GL_FALSE, 0);
-    glEnableVertexArrayAttrib(VAO_NvidiaKnight, 0);
-    glVertexArrayAttribBinding(VAO_NvidiaKnight, 0, 0);
+    glVertexArrayAttribFormat(VAO_Model, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_Model, 0);
+    glVertexArrayAttribBinding(VAO_Model, 0, 0);
     /* Normal */ // Normal is at offset 3 * bytes size(float)
-    glVertexArrayAttribFormat(VAO_NvidiaKnight, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
-    glEnableVertexArrayAttrib(VAO_NvidiaKnight, 1);
-    glVertexArrayAttribBinding(VAO_NvidiaKnight, 1, 0);
+    glVertexArrayAttribFormat(VAO_Model, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Model, 1);
+    glVertexArrayAttribBinding(VAO_Model, 1, 0);
     /* Color */ // Color is at offset 6 * bytes size(float)
-    glVertexArrayAttribFormat(VAO_NvidiaKnight, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
-    glEnableVertexArrayAttrib(VAO_NvidiaKnight, 2);
-    glVertexArrayAttribBinding(VAO_NvidiaKnight, 2, 0);
+    glVertexArrayAttribFormat(VAO_Model, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Model, 2);
+    glVertexArrayAttribBinding(VAO_Model, 2, 0);
     /* uv */ // uv is at offset 9 * bytes size(float)
-    glVertexArrayAttribFormat(VAO_NvidiaKnight, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
-    glEnableVertexArrayAttrib(VAO_NvidiaKnight, 3);
-    glVertexArrayAttribBinding(VAO_NvidiaKnight, 3, 0);
+    glVertexArrayAttribFormat(VAO_Model, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_Model, 3);
+    glVertexArrayAttribBinding(VAO_Model, 3, 0);
 
     /* Create camera */
     Camera camera(Vec3f{ 0.0f, 0.0f, 0.0f }); // inside cube.
@@ -453,7 +453,7 @@ int main(int argc, char** argv)
         glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
         glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
         glUniform3fv(3, 1, cameraPosition.Data());
-        glBindVertexArray(VAO_NvidiaKnight);
+        glBindVertexArray(VAO_Model);
         glBindTextureUnit(0, textureHandleCubemap);
         glDrawArrays(GL_TRIANGLES, 0, model.NumVertices());
 

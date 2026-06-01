@@ -1,13 +1,12 @@
 #version 460
 
-layout(location = 1) in vec3 in_Color;
-layout(location = 3) in vec3 in_TexelPos;
+layout(location = 0) in vec3 in_Color;
+layout(location = 1) in vec3 in_TexelPos;
 
 out vec4 outColor;
 
 // TODO: Aufgabe 5.1.2)
 layout(binding = 0) uniform samplerCube u_Texture;
-
 
 void main()
 {
