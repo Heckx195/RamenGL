@@ -155,6 +155,8 @@ int main(int argc, char** argv)
 
     /* GL Resources shutdown. */
     shader.Delete();
+    glDeleteBuffers(1, &VBOName);
+    glDeleteBuffers(1, &VAOName);
 
     // TODO: Delete OpenGL Resources you created (VAO, VBO).
 

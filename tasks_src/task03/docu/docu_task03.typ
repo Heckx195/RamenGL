@@ -52,7 +52,7 @@ Wie testen Sie, ob Ihre Normalenvektoren korrekt sind und auch korrekt
 im Shader sind? Nutzen Sie mindestens zwei Möglichkeiten.
 Dokumentieren Sie Ihr Vorgehen.
 
--> *Lösung:*
+=== Lösung
 1. Möglichkeit: Visualisierung der Normalenvektoren
   - Normalenvektoren als Linien in der Szene visualisieren. Dazu wird für jeden Vertex eine Linie gezeichnet zwischen seinem Position und einem Punkt auf seiner Normalen. Die Farbe wird basierend auf seiner Ausrichtung berechnet. Wenn die Normalen korrekt sind, sollten sie in der Szene sichtbar sein und die Farben sollten entsprechend der Ausrichtung variieren.
   - Farbkennzeichnung:
