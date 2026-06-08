@@ -24,7 +24,7 @@ void main()
     gl_Position = position;
 
     mat3 normalMatrix = transpose(inverse(mat3(u_ModelMat)));
-    out_Normal = normalize(normalMatrix * in_Normal);
+    out_Normal = normalMatrix * in_Normal; // Korrekt transformierte Normalenvektoren in_Normal
     out_WorldSpacePos = vec3(u_ModelMat * vec4(in_Position, 1.0f));
     out_Color = in_Color;
 }

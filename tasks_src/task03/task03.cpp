@@ -102,7 +102,8 @@ std::vector<Vertex> CreateCylinder(const Vec3f& color, int slices = 32)
 
     const float pi = RAMEN_PI;
 
-    // Vorberechnung der Punkte auf dem Ring für Top und Bottom.
+    // Vorberechnung der Punkte auf dem Ring für Top und Bottom,
+    //  da man die Punkte wiederverwendet (Mantel und Deckel)
     std::vector<Vec3f> top(slices);
     std::vector<Vec3f> bot(slices);
     for (int i = 0; i < slices; ++i)
@@ -218,12 +219,12 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
             };
 
             Vec3f p00 = pos(phi0, theta0);  Vec3f p01 = pos(phi0, theta1); // Ring oben, rechts nach links
-            Vec3f p10 = pos(phi1, theta0);  Vec3f p11 = pos(phi1, theta1); // Ring unten, rechts nah links
+            Vec3f p10 = pos(phi1, theta0);  Vec3f p11 = pos(phi1, theta1); // Ring unten, rechts nach links
 
             // UV: u = theta/(2pi), v = phi/pi -> Umrechnung in [0,1]^2
                 // theta / (2*pi) = Ein Wert zwischen 0.0 und 1.0 auf der U-Achse (links nach rechts).
                 // phi / pi = Ein Wert zwischen 0.0 und 1.0 auf der V-Achse (oben nach unten).
-            // 1.0f - phi0 / pi, 0.f -> sodass uv-Koordinaten (0, 0) oben links und (1, 1) unten rechts
+                    // 1.0f - phi0 / pi, 0.f -> sodass uv-Koordinaten (0, 0) unten links und (1, 1) oben rechts
             Vec3f uv00{ theta0 / (2 * pi), 1.0f - phi0 / pi, 0.f };
             Vec3f uv01{ theta1 / (2 * pi), 1.0f - phi0 / pi, 0.f };
             Vec3f uv10{ theta0 / (2 * pi), 1.0f - phi1 / pi, 0.f };

@@ -25,8 +25,7 @@ alle drei Achsen rot eingefärbt hat.
 Alle drei Achsen des Koordinatensystems werden im Moment in rot
 gerendert. Erweitern Sie das Programm, sodass der Vertexshader
 das Farbattribut der Vertices erhält. Erweitern Sie den Shadercode
-ebenfalls, damit diese Farbattribute an den Fragmentshader weitergereicht
-werden.
+ebenfalls, damit diese Farbattribute an den Fragmentshader weitergereicht werden.
 
 ## 3.2) Zylinder, Quader, Kugeln
 Bauen Sie sich Funktionen, die Ihnen **mindestens** die folgenden
