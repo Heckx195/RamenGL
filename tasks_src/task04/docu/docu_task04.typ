@@ -8,6 +8,15 @@ cmake --build build/
 = Aufgabe04
 https://docs.gl/
 
+== 4.1) Hinzufügen von Texturkoordinaten zu einem Quad
+Weisen Sie ihren Quad-Vertices Texturkoordinaten zu, sodass die vier
+Eckpunkte eines quadratischen Bildes den Vertices zugeordnet werden.
+
+=== Lösung
+- Texturkoordinaten so erstellen, dass die UV-Koordinaten von oben links (0,0) nach unten rechts (1,1) verlaufen. Wenn (0,0) oben links ist, dann steht die Textur auf dem Kopf.
+- Der Unterschied kommt daher, da Bildformate (PNG, JPEG) die Pixel von oben links nach unten rechts speichern, während OpenGL die UV-Koordinaten standardmäßig von unten links nach oben rechts interpretiert
+ - Man kann die Texturkoordinaten anpassen oder beim Laden des Bildes eine Flip durchführen, um die Textur korrekt darzustellen.
+
 == 4.2) Erstellen einer OpenGL Textur auf der GPU
 Finden Sie heraus, was die einzelnen Befehle bewirken und nehmen Sie
 die Erkenntnisse in Ihre Dokumentation mit auf.
@@ -106,20 +115,39 @@ Lädt Pixeldaten von der CPU in den zuvor reservierten GPU-Speicher. Ermöglicht
 
 #line(length: 100%)
 
+== 4.3) Zugänglich machen der Texturkoordinaten im Shader
+'Verdrahten' Sie nun das Texturkoordinaten-Attribut über das VAO
+mit dem Vertex-Shader, sodass die Texturkoordinaten in diesem verfügbar werden. Ermöglichen Sie ausserdem
+die Weiterleitung der Texturkoordinaten aus dem Vertex- in den Fragment-Shader.
+
+=== Lösung
+```c++
+/* uv */ // uv is at offset 9 * bytes size(float)
+glVertexArrayAttribFormat(VAO_Earth, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+glEnableVertexArrayAttrib(VAO_Earth, 3);
+glVertexArrayAttribBinding(VAO_Earth, 3, 0); 
+```
+- Damit wird dem VAO mitgeteilt, dass die Texturkoordinaten an _layout(location=3)_ liegen und im Vertex-Shader als vec3 zugegriffen werden können.
+- Über _layout(location = 2) out vec3 out_UV_ im Vertex-Shader werden diese an den Fragment-Shader an _location=2_ mit _out_UV = in_UV_ weitergeleitet.
+
+#line(length: 100%)
+
 == 4.4) Textur im Shader verwenden
 Finden Sie nun den entsprechenden CPU-Seitigen Befehl, der
 die OpenGL-Textur, welche Sie in 4.4 erstellt haben, mit
 dem Shader verbindet.
 
--> *Lösung*:
-
+== Lösung
 ```c
 glBindTextureUnit(0, textureHandle);
 ```
 - Bindet Texture-Handler an Texture Unit0. Im Shader über uniform wird darauf zugegriffen.
 
-#line(length: 100%)
+== Implementierung
+- Im Fragment-Shader werden über die built-in Funktion _texture(sampler2D, in_UV.st)_ die Texturfarben anhand der Texturkoordinaten aus der Textur (_u_Texture_) abgefragt.
+- Der Sampler2D wurde in der Rendering-Loop mit _glBindTextureUnit(0, textureHandle)_ an Texture Unit 0 gebunden, auf die im Shader über den uniform sampler2D zugegriffen werden kann.
 
+== Frage
 Je nachdem, wie Sie Ihre Texturkoordinaten erstellt haben, sehen
 Sie das Bild auf dem Kopf. Wenn dem so ist, finden Sie eine Erklärung
 und einen Weg, dies zu ändern. Aber auch, wenn das Bild nicht
@@ -129,17 +157,30 @@ Nehmen Sie die Erkenntnisse in Ihre Dokumentation mit auf.
 -> *Lösung*:
 - Texturkoordinaten wurden so erstellt, dass die UV-Koordinaten von unten links (0, 0) nach oben rechts (1, 1) verlaufen. Die Textur steht aktuell auf dem Kopf. Wenn man aber (0, 0) auf oben links ändert und (1, 1) auf unten rechts, steht die Textur korrekt herum. Das liegt daran, dass Textur-Koordinaten standardmaessig von oben links nach unten rechts verlaufen.
 
+#line(length: 100%)
+
+== 4.5.) Texturkoordinaten für die Kugel erstellen
+Nutzen Sie die Kugel, die Sie in task03 erstellt haben und
+weisen Sie dieser so Texturkoordinaten zu, sodass sich eine
+Weltkarte auf diese 'mappen' lässt. Rendern Sie die Kugel.
+
+== Implementierung
+- Die Funktion _CreateSphere()_ aus task03 generiert bereits Texturkoordinaten. Diese wurden so erstellt, dass die UV-Koordinaten von unten links (0, 0) nach oben rechts (1, 1) verlaufen. Dadurch wird die Weltkarte auf der Kugel korrekt dargestellt.
+- Die Textur der Weltkarte wird durch die zuvor erklärten Vertex- und Fragment-Shader auf die Fragments der Kugel gemappt.
+
+#line(length: 100%)
+
 == 4.6.) Rotation der Kugel
 Ermöglichen Sie die Rotation der Kugel mithilfe
 der Pfeiltasten, sodass Sie die Kugel von allen
 Blickwinkeln betrachten können.
 
 -> *Lösung*:
-
 ```c
 // Reihenfolge für Rotation wichtig! Erst Welt-Y-Achse dann Welt-X-Achse
 Mat4f earthModelMat = modelMat
-  * Translate(Vec3f{ 0.0f, 0.0f, 0.0f }) * baseScale
+  * Translate(Vec3f{ 0.0f, 0.0f, 0.0f })
+  * baseScale
   * Rotate(RAMEN_WORLD_RIGHT, earthCameraAngleX)
   * Rotate(RAMEN_WORLD_UP, earthCameraAngleY)
 ;

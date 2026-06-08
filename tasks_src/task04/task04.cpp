@@ -179,8 +179,8 @@ int main(int argc, char** argv)
     // TODO: Aufgabe 4.2) OpenGL Textur auf GPU erstellen
     GLuint textureHandle;
     glCreateTextures(GL_TEXTURE_2D, 1, &textureHandle);
-    glTextureParameteri(textureHandle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTextureParameteri(textureHandle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(textureHandle, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // s = u-Koordinate
+    glTextureParameteri(textureHandle, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // t = v-Koordinate
     glTextureParameteri(textureHandle, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(textureHandle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTextureStorage2D(textureHandle, 1, GL_RGBA8, image.GetWidth(), image.GetHeight());
