@@ -701,7 +701,7 @@ int main(int argc, char** argv)
         Vec3f lightPos{ 15.0f, 0.0f, 0.0f }; // 5.0f, 0.0f, -5.0f
         glUniform3fv(3, 1, lightPos.Data()); // als uniform in fragment-shader an pos3 packen
 
-        glDrawArrays(GL_LINES, 0, 6); // Zeichne die Weltkoordinatenachsen (6 Vertices = 3 Linien für die Koordinatenachsen)
+        // glDrawArrays(GL_LINES, 0, 6); // Zeichne die Weltkoordinatenachsen (6 Vertices = 3 Linien für die Koordinatenachsen)
         // GL_Lines = Zeichenmodus; jedes Paar von Vertices wird als Linie interpretiert. (6 Vertices = 3 Linien für die Koordinatenachsen)
 
         // Basis-Transformation für alle Modelle: Skalierung, damit sie nicht zu groß sind.
@@ -713,8 +713,10 @@ int main(int argc, char** argv)
         glBindVertexArray(VAO_Cube);
         glDrawArrays(GL_TRIANGLES, 0, cubeVertices.size());
         // Normalenvektoren des Würfels
+        glUniform1i(4, 1); // Aktivere Kein-Schatten für Normalenanzeige.
         glBindVertexArray(VAO_CubeNormals);
         glDrawArrays(GL_LINES, 0, (GLsizei)cubeNormals.size());
+        glUniform1i(4, 0); // Deaktiviere Kein-Schatten für Normalenanzeige.
 
         // Draw the cylinder.
         Mat4f cylinderModel = modelMat * Translate(Vec3f{-1.2f, 0.0f, 0.0f}) * baseScale;
@@ -722,8 +724,10 @@ int main(int argc, char** argv)
         glBindVertexArray(VAO_Cylinder);
         glDrawArrays(GL_TRIANGLES, 0, cylinderVertices.size());
         // Normalenvektoren des Zylinders
+        glUniform1i(4, 1);
         glBindVertexArray(VAO_CylinderNormals);
         glDrawArrays(GL_LINES, 0, (GLsizei)cylinderNormals.size());
+        glUniform1i(4, 0);
 
         // Draw the sphere.
         Mat4f sphereModel = modelMat * Translate(Vec3f{1.2f, 0.0f, 0.0f}) * baseScale;
@@ -731,8 +735,10 @@ int main(int argc, char** argv)
         glBindVertexArray(VAO_Sphere);
         glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
         // Normalenvektoren der Kugel
+        glUniform1i(4, 1);
         glBindVertexArray(VAO_SphereNormals);
         glDrawArrays(GL_LINES, 0, (GLsizei)sphereNormals.size());
+        glUniform1i(4, 0);
 
         // TODO: Aufgabe 3.7) Animation -> Sonnnsystem
         MatrixStack matrixStack = MatrixStack();

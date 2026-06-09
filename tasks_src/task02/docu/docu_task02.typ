@@ -169,3 +169,11 @@ void glDrawArrays(
 - count: Anzahl der zu verwendenden Vertices (ab dem Index first).
 
 Wird verwendet, um Primitiven (wie Punkte, Linien oder Dreiecke) aus dem aktuell gebundenen Vertex-Daten zu rendern. Die Vertex-Daten kommen aus den aktuell gebundenen Vertex-Array-Objekten (VAOs) und Vertex-Buffer-Objekten (VBOs). Die Funktion verwendet die Vertex-Daten in der Reihenfolge, in der sie im Buffer gespeichert sind.
+
+#line(length: 100%)
+
+= Ergebnis
+#figure(
+  image("task02_result.png", height: 40%),
+  caption: [Ergebnis von Aufgabe 02],
+)

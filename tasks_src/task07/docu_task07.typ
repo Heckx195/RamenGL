@@ -24,13 +24,19 @@ cmake --build build/
 )
 
 == 7.3) Dokumentation
-- Macht es Sinn, Schatten vollständig in Schwarz zu rendern? Wenn ja, warum? Wenn nicht,
+=== Frage 1.:
+Macht es Sinn, Schatten vollständig in Schwarz zu rendern? Wenn ja, warum? Wenn nicht,
   warum nicht?
+
 -> *Lösung*: Nein, wenn die verdeckenden Objekte nicht vollständig lichtundurchlässig sind, verfärben diese den Schatten.
 
-- Wie hat sich die Texturgrösse auf die Performance Ihres Programms ausgewirkt? Hat PCF
+=== Frage 2.:
+Wie hat sich die Texturgrösse auf die Performance Ihres Programms ausgewirkt? Hat PCF
   die Performance erhöht oder erniedrigt? Wenn ja, um wie viel Prozent?
+
 -> *Lösung*: Die Texturgröße hat die Performance nicht wirklich beeinflusst. Interessanterweise stieg sie sogar bei 8192x8192 an. PCF hat die Performance leicht erniedrigt, aber nicht signifikant (ca. 30-50 FPS).
 
-- PCF ermöglicht zwar einen weicheren Übergang am Rand des Schattens, lässt aber (mind.) eine physikalische Begebenheit ausser acht. Welche ist das?
+=== Frage 3.:
+PCF ermöglicht zwar einen weicheren Übergang am Rand des Schattens, lässt aber (mind.) eine physikalische Begebenheit ausser acht. Welche ist das?
+
 -> *Lösung*: PCF berücksichtigt nicht die Lichtstreuung. In der Realität wird das Licht durch die Atmosphäre und andere Partikel gestreut, was zu weicheren Schatten führt. Dieser Effekt wird durch PCF nicht berücksichtigt, da es nur die Tiefenwerte der Schattenkarte vergleicht und nicht die Lichtstreuung. 
