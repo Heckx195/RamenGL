@@ -57,32 +57,32 @@ std::vector<Vertex> CreateSkyboxCube(const Vec3f& color)
     // CCW von außen der Würfeloberfläche sichtbare Dreiecksnetz definieren
     // Front face (z = -1)
     pushQuad(corners[0], corners[1], corners[2], corners[3],
-            Vec3f{0,0,-1},
+            Vec3f{0,0,1}, // Normale zeigt nach innen (zum Ursprung)
             Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
 
     // Back face (z = +1)
     pushQuad(corners[4], corners[7], corners[6], corners[5],
-            Vec3f{0,0,1},
+            Vec3f{0,0,-1},
             Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
 
     // Left face (x = -1)
     pushQuad(corners[0], corners[3], corners[7], corners[4],
-            Vec3f{-1,0,0},
+            Vec3f{1,0,0},
             Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
 
     // Right face (x = +1)
     pushQuad(corners[1], corners[5], corners[6], corners[2],
-            Vec3f{1,0,0},
+            Vec3f{-1,0,0},
             Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
 
     // Bottom face (y = -1)
     pushQuad(corners[0], corners[4], corners[5], corners[1],
-            Vec3f{0,-1,0},
+            Vec3f{0,1,0},
             Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
 
     // Top face (y = +1)
     pushQuad(corners[3], corners[2], corners[6], corners[7],
-            Vec3f{0,1,0},
+            Vec3f{0,-1,0},
             Vec3f{0,0,0}, Vec3f{1,0,0}, Vec3f{1,1,0}, Vec3f{0,1,0});
     
     return vertices;
@@ -134,7 +134,6 @@ void loadCubemap(
     GLuint& textureID,
     const std::vector<std::string>& faces
 ) {
-    
     glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &textureID);
 
     int width, height, nrChannels;
@@ -410,7 +409,7 @@ int main(int argc, char** argv)
 
         ImGui::Begin("Cubemap settings");
 
-        ImGui::Checkbox("glDepthMask(GL_FALSE) fuer Skybox", &useDepthMask);
+        ImGui::Checkbox("glDepthMask(GL_FALSE) fuer Skybox (True: Skybox immer im Hintergrund)", &useDepthMask);
         ImGui::Checkbox("Skybox View Matrix (Translation entfernen)", &useSkyboxViewMat);
 
         ImGui::End();

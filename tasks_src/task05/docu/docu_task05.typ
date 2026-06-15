@@ -9,21 +9,22 @@ cmake --build build/
 - https://docs.gl/
 - https://learnopengl.com/Advanced-OpenGL/Cubemaps
 
-== 5.1.1) Erstellen der 3D Textur
-Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`).
-Diesmal handelt es sich aber um den Typ: `GL_TEXTURE_CUBEMAP`.
-Diese Texturart erlaubt es Ihnen im Shader mit einem
-3D-Richtungsvektor von den sechs Seiten der Cubemap zu samplen.
-Den Texturspeicher legen Sie mit `glTextureStorage2D` an.
-Nun können Sie die sechs geladenen Bilder mithilfe der
-Funktion `glTextureSubImage3D` in den angelegten Speicher
-der Grafikkarte laden.
-Nehmen Sie in Ihre Dokumentation mit auf für was die Parameter
-von `glTextureSubImage3D` stehen und wie Sie vorgegangen sind.
-Spielt die Reihenfolge, mit der Sie die einzelnen Bilder hochladen,
-eine Rolle?
+== 5.1.0) Erstellen der Cubemap
+Erstellen Sie sich die Vertexdaten für einen Würfel. Achten Sie aber arauf, dass sich der Ursprung des Würfels in dessen Schwerpunktmittelpunkt befindet und die Frontfaces des Würfels nach innen zeigen. Schreiben Sie einen Vertex- und Fragmentshader, der Ihnen den Würfel zeichnet.
 
--> *Lösung*
+=== Implementierung
+Wiederverwendung des Würfels aus Aufgabe 03 mit der Änderung, dass die Frontfaces nach innen zeigen. Dafür wurde die Vertex-Wending-Order angepasst, sodass die Vertices im Uhrzeigersinn von außen nach innen definiert werden. Ebenso wurden die Normalenvektoren angepasst, damit sie nach innen zum Ursprung zeigen.
+
+== 5.1.1) Erstellen der 3D Textur
+Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`). Diesmal handelt es sich aber um den Typ: `GL_TEXTURE_CUBEMAP`.Diese Texturart erlaubt es Ihnen im Shader mit einem 3D-Richtungsvektor von den sechs Seiten der Cubemap zu samplen. Den Texturspeicher legen Sie mit `glTextureStorage2D` an. Nun können Sie die sechs geladenen Bilder mithilfe der Funktion `glTextureSubImage3D` in den angelegten Speicher der Grafikkarte laden. Nehmen Sie in Ihre Dokumentation mit auf für was die Parameter von `glTextureSubImage3D` stehen und wie Sie vorgegangen sind. 
+
+=== Implementierung
+
+
+=== Frage 1.):
+Spielt die Reihenfolge, mit der Sie die einzelnen Bilder hochladen, eine Rolle?
+
+=== Lösung
 - Die Reihenfolge beim Hochladen der sechs Bilder spielt in dem Sinne nur eine Rolle, dass sie zum richtigen Enum zugeordnert werden müssen
  - i=0 -> GL_TEXTURE_CUBE_MAP_POSITIVE_X
  - i=1 -> GL_TEXTURE_CUBE_MAP_NEGATIVE_X

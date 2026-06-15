@@ -149,10 +149,7 @@ rotieren bzw. verschiebt. Erklären Sie warum die Kamera sich so verhält.
 #line(length: 100%)
 
 == 3.7) Matrizen-Stack
-Bauen Sie eine animierte Szene mithilfe eines Matrizenstapels und
-den von Ihnen erstellten primitiven Körpern.
-Implementieren Sie hierzu am besten eine Klasse, welche die
-Methoden aus der Vorlesung zur Verfügung stellt.
+Bauen Sie eine animierte Szene mithilfe eines Matrizenstapels und den von Ihnen erstellten primitiven Körpern. Implementieren Sie hierzu am besten eine Klasse, welche die Methoden aus der Vorlesung zur Verfügung stellt.
 
 === Lösung
 - Es wurde eine Klasse _matrixStack.h_ erstellt, die einen Stack (_vector_) von Matrizen verwaltet. Die Klasse besitzt Methoden zum Pushen und Popen von Matrizen sowie zum Multiplizieren der aktuellen Matrix mit einer neuen Transformation/ Rotation oder Skalierung.
