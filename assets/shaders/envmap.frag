@@ -10,13 +10,16 @@ layout(location = 3) uniform vec3 cameraPos;        // location für normale Wer
 
 void main()
 {
-    vec3 I = normalize(in_WorldPos - cameraPos);
-    vec3 N = normalize(in_WorldNormal);
+    vec3 I = normalize(in_WorldPos - cameraPos); // Einfallender Strahl
+    vec3 N = normalize(in_WorldNormal); // Oberflaechennormale
     vec3 reflectDirection = reflect(I, N); // Normalize weil reflect benötigt Einheitsvektoren
-        // I=Incident: Vektor von der Kamera zur Oberfläche (der eintreffende Sichtstrahl)
-        // N=Normal: Oberflächennormale des Modells (zeigt vom Objekt weg)
+        // I=Incident: Vektor von der Kamera zur Oberflaeche (der eintreffende Sichtstrahl)
+        // N=Normal: Oberflaechennormale des Modells (zeigt vom Objekt weg)
+        // == Reflexionsvektor
 
     outColor = texture(u_Cubemap, reflectDirection);
         // Sampelt über Richtungsvektor/Reflexionsvektor (reflectDirection) die korrekten Farbwerte an dem Punkt
         // u_Cubemap ist der texture unit, die in der Main auf "0" gebindet wurde
+        // 1. Findet richtige Flaeche von der Cubemap, durch groesste Komponente im Richtungsvektor
+        // 2. Findet Farbwert auf der Flaeche
 }

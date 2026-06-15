@@ -149,6 +149,9 @@ void loadCubemap(
             {
                 // Nur einmal Speicher für die gesamte Cubemap allokieren. Möglich weil alle 6 Seiten gleich groß sind.
                 glTextureStorage2D(textureID, 1, GL_RGB8, width, height);
+                    // OpenGL-Spezifikation: gleiche Breite/ Höhe für alle Seiten
+                    // und alle Seiten müssen quadratisch sein (width == height)
+
                 storageAllocated = true;
             }
             // i = Face-Index
@@ -163,9 +166,7 @@ void loadCubemap(
                 0, // level
                 0, 0, // xoffset, yoffset
                 i, // zoffset = Face-Index
-                width,
-                height,
-                1,
+                width, height, 1,
                 GL_RGB,
                 GL_UNSIGNED_BYTE,
                 data
@@ -430,8 +431,8 @@ int main(int argc, char** argv)
             skyboxViewMat[3][0] = 0.0f;
             skyboxViewMat[3][1] = 0.0f;
             skyboxViewMat[3][2] = 0.0f;
-        }
-        
+        } // Skybox bleibt zentral um Kamera, aber rotiert mit Kamerarotation mit
+
         shader.Use();
         glUniformMatrix4fv(0, 1, GL_FALSE, modelMat.Data());
         glUniformMatrix4fv(1, 1, GL_FALSE, skyboxViewMat.Data());
