@@ -23,6 +23,18 @@ Mat2f Inverse(const Mat2f& m)
 
     return det * Mat2f{ d, -c, -b, a };
 }
+
+float Cross(const Vec2f& a, const Vec2f& b)
+{
+    return (a.x * b.y) - (a.y * b.x);
+}
+
+Vec2f::Vec2f(const Vec3f& v3)
+{
+    x = v3.x;
+    y = v3.y;
+}
+
 Vec3f Cross(const Vec3f& a, const Vec3f& b)
 {
     return Vec3f{ a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x };

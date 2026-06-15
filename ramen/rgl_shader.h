@@ -12,6 +12,7 @@ class Shader
 {
   public:
     bool Load(const char* vertShaderFile, const char* fragShaderFile);
+    bool Load(const char* shaderFile, GLenum shaderType);
 
     void Use();
 

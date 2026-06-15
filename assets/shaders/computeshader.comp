@@ -1,0 +1,134 @@
+#version 460 core
+
+/* vec4 aligned index data. */
+struct Triangle {
+    uvec4 indices;
+};
+
+/* vec4 aligned vertex data. */
+struct Vertex
+{
+    vec4 pos3_normalX;
+    vec4 normalYZ_colorXY;
+    vec4 colorZ_uvXYZ;
+    vec4 tangentXYZ_bitangentX;
+    vec4 bitangentYZ_padding;
+};
+
+struct ComputeShaderVertex
+{
+    vec4 position;
+    vec4 normal;
+    vec4 color;
+    vec4 uv;
+    vec4 tangent;
+    vec4 bitangent;
+};
+
+struct Patch
+{
+    vec4 worldpos;
+    vec4 normal;
+    vec4 radiance;
+    vec4 debugColor;
+    vec4 area;
+};
+
+struct HitInfo
+{
+    bool hit;
+    float dist;
+    vec3 color;
+    vec3 pos;
+};
+
+layout(std430, binding = 0) readonly buffer PatchesSSBO_Read {
+    Patch patches_read[];
+};
+
+layout(std430, binding = 1) writeonly buffer PatchesSSBO_Write {
+    Patch patches_write[];
+};
+
+layout(std430, binding = 2) readonly buffer TriangleSSBO_IN {
+    Triangle trianglesIN[];
+};
+
+layout(std430, binding = 3) readonly buffer VerticesSSBO_IN {
+    ComputeShaderVertex verticesIN[];
+};
+
+layout(binding = 0, rgba32f) writeonly uniform image2D u_LightmapTexture;
+
+layout(location = 1) uniform uint u_FrameNum;
+layout(location = 2) uniform uint u_NumTris;
+layout(location = 3) uniform uint u_NumBounces;
+layout(location = 4) uniform uint u_NumIterations;
+layout(location = 5) uniform uint u_Reset;
+
+/* Random Unit vector generation via Wang Hash. Code by Alan Wolfe */
+const float c_pi = 3.14159265359f;
+const float c_twopi = 2.0f * c_pi;
+
+uint wang_hash(inout uint seed)
+{
+    seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
+    seed *= uint(9);
+    seed = seed ^ (seed >> 4);
+    seed *= uint(0x27d4eb2d);
+    seed = seed ^ (seed >> 15);
+    return seed;
+}
+
+float RandomFloat01(inout uint state)
+{
+    return float(wang_hash(state)) / 4294967296.0;
+}
+
+vec3 RandomUnitVector(inout uint state)
+{
+    float z = RandomFloat01(state) * 2.0f - 1.0f;
+    float a = RandomFloat01(state) * c_twopi;
+    float r = sqrt(1.0f - z * z);
+    float x = r * cos(a);
+    float y = r * sin(a);
+    return vec3(x, y, z);
+}
+/* ! End code of Alan Wolfe */
+
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 1) in;
+
+void main()
+{
+
+    /* initialize a random number state based on compute-unit ( = lightmap texture coord) and frame */
+    uint rngState = uint(uint(gl_GlobalInvocationID.x) * uint(1973) + uint(gl_GlobalInvocationID.y) * uint(9277) + uint(u_FrameNum) * uint(26699)) | uint(1);
+
+    /* Get the patch */
+    uint patch_index = gl_GlobalInvocationID.y * 1024 + gl_GlobalInvocationID.x;
+
+    /* Set patches to black ? */
+    if (u_Reset == 1)
+    {
+        patches_write[patch_index].radiance = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        return;
+    }
+
+    /* Get patch for current workitem. */
+    Patch p = patches_read[patch_index];
+
+    /* Generate a random unit vector on this patch to use as ray */
+    vec3 rand_dir = RandomUnitVector(rngState);
+    // Make sure ray faces away from patch's front-face.
+    if (dot(rand_dir, p.normal.xyz) < 0) {
+        rand_dir = -rand_dir;
+    }
+
+    /* Update radiance for patch. For now, just visualize random unit vector. */
+    p.radiance = vec4(0.5f * rand_dir + 0.5f, 1.0f);
+    patches_write[patch_index] = p;
+
+    /* Also write result into lightmap texture */
+    ivec2 lightmapUV = ivec2(gl_GlobalInvocationID.xy);
+    imageStore(u_LightmapTexture, lightmapUV, p.radiance);
+}

@@ -1,3 +1,10 @@
+/* FIXME:
+ * - ToString does *not* work when calling on multiple args, eg
+ *   printf("uv0: %s, uv1: %", uv0.ToString(), uv1.ToString());
+ *   as it operates on the same buffer which is only written
+ *   once!
+ */
+
 #ifndef RGL_MATH_H
 #define RGL_MATH_H
 
@@ -34,6 +41,8 @@ struct Vec2f
         x = 0.0f;
         y = 0.0f;
     }
+
+    Vec2f(const Vec3f& v3);
 
     const float* Data() const
     {
@@ -751,6 +760,7 @@ struct Quat
 Vec2f operator*(const float& s, const Vec2f& v);
 Mat2f operator*(const float& s, const Mat2f& m);
 Mat2f Inverse(const Mat2f& m);
+float Cross(const Vec2f& a, const Vec2f& b);
 Vec3f Cross(const Vec3f& a, const Vec3f& b);
 float Length(const Vec4f& v);
 Vec3f Normalize(const Vec3f& v);
