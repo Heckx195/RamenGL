@@ -108,13 +108,18 @@ glTextureParameteri(textureHandle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 #line(length: 100%)
 
 == 5.1.2) Samplen von der Cubemap Textur
-- Im Vertexshader übergibt man die in_Position der Vertices im Objektkoordinatensystem als Texturkoordinaten an den Fragmentshader.
+- Im Vertexshader übergibt man die `in_Position` der Vertices im Objektkoordinatensystem als Texturkoordinaten an den Fragmentshader.
 - Im Fragmentshader samplet man mit `texture(skyboxCubemap, in_TexCoord)` von der Cubemap-Textur. `in_TexCoord` ist dabei ein 3D-Richtungsvektor, der die Richtung von der Kamera zum Vertex angibt. Das Samplen von der Cubemap-Textur mit einem Richtungsvektor ermöglicht es, die entsprechende Seite der Cubemap zu verwenden und die korrekte Farbe basierend auf der Richtung zu liefern.
 
 
 #line(length: 100%)
 
 == 5.1.3) Kamera
+Implementieren Sie Tastaturinput, sodass Sie mit der Kamera
+in der Szene herumfahren und rotieren können.
+
+=== Implementierung
+- Wie in der vorherigen Aufgabe 03 bereits implementiert, wird die Kamera über die WASD-Tasten für die Translation und die Pfeiltasten für die Rotation, bzw. QE-Tasten für die Rotation um die Blickrichtung (Roll), gesteuert. Für die Kamerabewegung werden die internen Funktionen der Kamera-Klasse verwendet, um die Variablen der Kamera entsprechend zu aktualisieren und danach mit diesen die ViewMatrix zu berechnen.
 
 #line(length: 100%)
 
