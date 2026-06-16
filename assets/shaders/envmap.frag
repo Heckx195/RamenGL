@@ -6,11 +6,11 @@ layout(location = 1) in vec3 in_WorldNormal;
 out vec4 outColor;
 
 layout(binding = 0) uniform samplerCube u_Cubemap;  // binding für sampler
-layout(location = 3) uniform vec3 cameraPos;        // location für normale Werte
+layout(location = 3) uniform vec3 u_CameraPos;        // location für normale Werte
 
 void main()
 {
-    vec3 I = normalize(in_WorldPos - cameraPos); // Einfallender Strahl
+    vec3 I = normalize(in_WorldPos - u_CameraPos); // Einfallender Strahl
     vec3 N = normalize(in_WorldNormal); // Oberflaechennormale
     vec3 reflectDirection = reflect(I, N); // Normalize weil reflect benötigt Einheitsvektoren
         // I=Incident: Vektor von der Kamera zur Oberflaeche (der eintreffende Sichtstrahl)

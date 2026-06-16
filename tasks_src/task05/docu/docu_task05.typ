@@ -109,8 +109,7 @@ glTextureParameteri(textureHandle, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 == 5.1.2) Samplen von der Cubemap Textur
 - Im Vertexshader übergibt man die `in_Position` der Vertices im Objektkoordinatensystem als Texturkoordinaten an den Fragmentshader.
-- Im Fragmentshader samplet man mit `texture(skyboxCubemap, in_TexCoord)` von der Cubemap-Textur. `in_TexCoord` ist dabei ein 3D-Richtungsvektor, der die Richtung von der Kamera zum Vertex angibt. Das Samplen von der Cubemap-Textur mit einem Richtungsvektor ermöglicht es, die entsprechende Seite der Cubemap zu verwenden und die korrekte Farbe basierend auf der Richtung zu liefern.
-
+- Im Fragmentshader samplet man mit `texture(skyboxCubemap, in_TexCoord)` von der Cubemap-Textur. `in_TexCoord` ist dabei die Objektkoordinaten der Vertices. Durch die Zentrierung des Würfels um den Ursprung (Kamera) und einer ViewMatrix ohne Translation (siehe 5.3), entsprechen die Objektkoordinaten der Vertices gleichzeitig den Richtungsvektoren von der Kamera zu den Vertices. Somit kann man die Objektkoordinaten der Vertices direkt als Texturkoordinaten für das Sampling der Cubemap-Textur verwenden. Das Samplen von der Cubemap-Textur mit einem Richtungsvektor ermöglicht es, die entsprechende Seite der Cubemap zu verwenden und die korrekte Farbe basierend auf der Richtung zu liefern.
 
 #line(length: 100%)
 
@@ -124,10 +123,27 @@ in der Szene herumfahren und rotieren können.
 #line(length: 100%)
 
 == 5.2) Environment Mapping
+Sie können die Cubemap dafür nutzen, um (perfekte) Reflexionen an einem Modell zu simulieren. Ermöglichen Sie dem neuen Shaderpaar ebenfalls auf die Cubemap Textur zuzugreifen. Lassen Sie nun die Cubemap an Ihrem Modell spiegeln. Nutzen Sie dafür die GLSL Funktion `reflect`. 
+
+=== Implementierung
 #figure(
   image("./envmap.jpeg", height: 30%),
-  caption: [Envmap.],
+  caption: [Zeichnung der Umgebungsmapping über berechneten Reflektionsvektor.],
 )
+
+- Für das Umgebungsmapping wird ein neuer Shader geschrieben, der zusätzlich Zugriff auf die Cubemap-Textur hat, um die mithilfe des berechneten Reflektionsvektors die entsprechende Farbe von der Cubemap zu samplen.
+
+==== Vertexshader
+- Im Vertexshader werden die Vertex-Positionen und Normalenvektoren vom Objektkoordinatensystem in das Weltkoordinatensystem transformiert (`u_ModelMat`) und an den Fragmentshader übergeben.
+
+==== Fragmentshader
+- Im Fragmentshader werden zusätzlich die Weltkoordinaten der Kamera über eine Uniform (`u_CameraPos`) übergeben.
+- `I` ist der Richtungsvektor von der Kamera zum Fragment des Objekts, worauf die Reflektion abgebildet werden soll. Den Richtungsvektor (einfallender Strahl vom Auge) wird durch die Subtraktion der Weltkoordinaten der Kamera von den Weltkoordinaten des Fragments berechnet.
+- `N` ist der Normalenvektor am Fragment, der ebenfalls in Weltkoordinaten vorliegen muss.
+- `R` ist der berechnete Reflektionsvektor, der mit der GLSL-Funktion `reflect(I, N)` berechnet wird. Diese Funktion berechnet den Reflektionsvektor basierend auf dem einfallenden Richtungsvektor `I` und dem Normalenvektor `N`.
+ - `reflect` spiegelt `I` an der Ebene, die durch `N` definiert ist (Einfallswinkel == Ausfallswinkel). Es wird über dot(N, I) die Projektion von `I` auf `N` berechnet und diese doppelt von `I` abgezogen, um eine Spiegelung zu erreichen — `I - 2·dot(N,I)·N`.
+ - Das Ergebnis `R` ist der Reflektionsvektor, der die Richtung angibt, in die das Licht reflektiert wird. 
+- Anschließend wird mit `texture(u_Cubemap, R)` von der Cubemap-Textur gesampelt, um die Farbe zu erhalten, die an diesem Fragment reflektiert wird. Dabei ist `R` ein 3D-Richtungsvektor der neben den UV-Koordinaten auch die richtige Seite der Cubemap auswählt, von der gesampelt werden soll, indem die Komponente mit der größten absoluten Ausprägung von `R` die Cubemap-Seite bestimmt und die anderen beiden Komponenten von `R` als UV-Koordinaten für das Sampling verwendet werden.
 
 #line(length: 100%)
 
@@ -155,7 +171,7 @@ if (useSkyboxViewMat) {
 ```
 
 - Modifiziert die View-Matrix, um die Translationskomponenten zu entfernen. Dadurch bleiben die Objekte, wie die Cubemap, immer um den Ursprung zentriert, unabhängig von der Position der Kamera, da die Verschiebung/ Translation auf Null gesetzt wird. Im Kamerakoordinatensystem ist die Kamera immer im Ursprung, und die Cubemap wird um diesen Ursprung herum gerendert, wodurch der Eindruck eines unendlich entfernten Horizonts entsteht.
-- Wird ein Objekt von der Kamera weg bewegt, würde normalerweise die View-Matrix eine Translation enthalten, die die Position der Kamera berücksichtigt. Durch das Setzen der Translationskomponenten auf Null wird diese Translation entfernt, und die Cubemap bleibt immer um den Ursprung zentriert, wodurch der Effekt eines unendlich entfernten Horizonts erzielt wird.
+- Wird die Kamera bewegt, würde normalerweise die View-Matrix eine Translation enthalten, die die Position der Kamera berücksichtigt. Durch das Setzen der Translationskomponenten auf Null wird diese Translation entfernt, und die Cubemap bleibt immer um den Ursprung zentriert, wodurch der Effekt eines unendlich entfernten Horizonts erzielt wird.
 
 #line(length: 100%)
 
