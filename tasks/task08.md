@@ -23,7 +23,7 @@ Sie hierzu ebenfalls eine UI-Komponente, die das Regeln der
 **reflectivness** ermöglicht.
 
 Führen Sie die Beleuchtungsberechnungen sowohl **pro Vertex** als
-auch **pro Fragment** durch. Implementieren Sie ein UI-Element,
+auch **pro Fragment** durch (Edit: Beleuchtungsrechnung in Vertex-Shader, Anwenden des Schattens in Fragment-Shader). Implementieren Sie ein UI-Element,
 sodass Sie zwischen den beiden Methoden umschalten können.
 Erläutern Sie, wie sich die Berechnung pro Fragment
 im Gegensatz zur Lichtberechnung pro Vertex unterscheidet und wie

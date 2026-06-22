@@ -12,7 +12,7 @@ cmake --build build/
 #line(length: 100%)
 
 == 5.1.0) Erstellen der Cubemap
-Erstellen Sie sich die Vertexdaten für einen Würfel. Achten Sie aber arauf, dass sich der Ursprung des Würfels in dessen Schwerpunktmittelpunkt befindet und die Frontfaces des Würfels nach innen zeigen. Schreiben Sie einen Vertex- und Fragmentshader, der Ihnen den Würfel zeichnet.
+Erstellen Sie sich die Vertexdaten für einen Würfel. Achten Sie aber darauf, dass sich der Ursprung des Würfels in dessen Schwerpunktmittelpunkt befindet und die Frontfaces des Würfels nach innen zeigen. Schreiben Sie einen Vertex- und Fragmentshader, der Ihnen den Würfel zeichnet.
 
 === Implementierung
 Wiederverwendung des Würfels aus Aufgabe 03 mit der Änderung, dass die Frontfaces nach innen zeigen. Dafür wurde die Vertex-Wending-Order angepasst, sodass die Vertices im Uhrzeigersinn von außen nach innen definiert werden. Ebenso wurden die Normalenvektoren angepasst, damit sie nach innen zum Ursprung zeigen.

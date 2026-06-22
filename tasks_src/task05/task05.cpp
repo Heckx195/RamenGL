@@ -210,7 +210,9 @@ int main(int argc, char** argv)
     }
 
     Model model{};
-    if ( !model.Load("models/skull.obj") ) // nvidiaknight_origin // cylinder doenst have normals // bunny doesnt have normals
+    if (
+        !model.Load(
+            "models/sphere_high.obj") ) // skull // nvidiaknight_origin // cylinder doenst have normals // bunny doesnt have normals
     {
         fprintf(stderr, "Could not load model file.\n");
     }
@@ -280,7 +282,7 @@ int main(int argc, char** argv)
 
     // TODO: Aufgabe 5.1.1
     GLuint textureHandleCubemap;
-    std::string prefix = "textures/cubemaps/Colosseum/";
+    std::string prefix = "textures/cubemaps/mountains_prof/"; // Colosseum
     loadCubemap(
         textureHandleCubemap,
         std::vector<std::string>{
@@ -466,8 +468,13 @@ int main(int argc, char** argv)
 
     /* GL Resources shutdown. */
     shader.Delete();
+    envmapShader.Delete();
+    glDeleteVertexArrays(1, &VAO_Model);
+    glDeleteBuffers(1, &VBO_Model);
     glDeleteVertexArrays(1, &VAO_SkyboxCube);
+    glDeleteBuffers(1, &VBO_SkyboxCube);
     glDeleteVertexArrays(1, &VAO_CubeNormals);
+    glDeleteBuffers(1, &VBO_CubeNormals);
     glDeleteTextures(1, &textureHandleCubemap);
 
     /* Ramen Shutdown */
