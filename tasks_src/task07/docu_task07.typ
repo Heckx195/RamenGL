@@ -40,3 +40,15 @@ Wie hat sich die Texturgrösse auf die Performance Ihres Programms ausgewirkt? H
 PCF ermöglicht zwar einen weicheren Übergang am Rand des Schattens, lässt aber (mind.) eine physikalische Begebenheit ausser acht. Welche ist das?
 
 -> *Lösung*: PCF berücksichtigt nicht die Lichtstreuung. In der Realität wird das Licht durch die Atmosphäre und andere Partikel gestreut, was zu weicheren Schatten führt. Dieser Effekt wird durch PCF nicht berücksichtigt, da es nur die Tiefenwerte der Schattenkarte vergleicht und nicht die Lichtstreuung. 
+
+
+
+
+
+-------------
+=== Renderingartefakt 3.: Shadow/ Light Bleeding
+- Effekt, bei dem fälscherlicherweise Licht in Bereichen auftritt, die eigentlich im Schatten liegen sollten.
+- Tritt auf, wenn die Rest Helligkeit des Halbschattens eines Objekts als Lichtfaktor eines anderen Objekts interpretiert wird, obwohl dieses Objekt eigentlich im Kernschatten liegen sollte. 
+
+==== Lösung: Percentage Closer Filtering (PCF)
+- PCF kann genutzt werden, um den Fehler zu kaschieren.

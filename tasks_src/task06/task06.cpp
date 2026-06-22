@@ -257,10 +257,10 @@ int main(int argc, char** argv)
         fprintf(stderr, "Could not load shadow map shader.\n");
     }
 
-    Shader flatShader{};
-    if ( !flatShader.Load("shaders/flat.vert", "shaders/flat.frag") )
+    Shader lightSourceShader{};
+    if ( !lightSourceShader.Load("shaders/lightSource.vert", "shaders/lightSource.frag") )
     {
-        fprintf(stderr, "Could not load flat shader.\n");
+        fprintf(stderr, "Could not load light source shader.\n");
     }
 
     Shader floorShader{};
@@ -365,7 +365,7 @@ int main(int argc, char** argv)
     glTextureStorage2D(textureHandleShadowMap, 1, GL_DEPTH_COMPONENT24, SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
     glTextureParameteri(textureHandleShadowMap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTextureParameteri(textureHandleShadowMap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-    float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f }; // border-color. Weiß bedeutet, dass außerhalb der Shadowmap alles beleuchtet ist. Schwarz würde bedeuten, dass außerhalb der Shadowmap alles im Schatten liegt.
+    float borderColor[] = { 1.0f, 0.0f, 0.0f, 0.0f }; // border-color. 1.0 für Rotkanal (Tiefenwert), sodass Tiefenvergleich außerhalb der Shadowmap immer true ist und alles beleuchtet wird.
     glTextureParameterfv(textureHandleShadowMap, GL_TEXTURE_BORDER_COLOR, borderColor);
     glTextureParameteri(textureHandleShadowMap, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTextureParameteri(textureHandleShadowMap, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -698,7 +698,7 @@ int main(int argc, char** argv)
         glUniform1f(7, useBias ? biasAmount : 0.0f); // Setzt bias-Wert in fragment-shader
         glDrawElementsBaseVertex(GL_TRIANGLES, NUM_QUAD_INDICES, GL_UNSIGNED_SHORT, 0, 0);
 
-        // Kugel: weiß + Shadow Acne sichtbar (kein Bias in floor.frag)
+        // Kugel: weiß + Shadow Acne sichtbar
         floorShader.Use();
         Mat4f sphereModelMat = modelMat * Translate(Vec3f{-3.0f, 0.0f, 0.0f});
         glUniformMatrix4fv(0, 1, GL_FALSE, sphereModelMat.Data());
@@ -713,7 +713,7 @@ int main(int argc, char** argv)
         glUniform1f(7, useBias ? biasAmount : 0.0f); // u_BiasAmount
         glDrawArrays(GL_TRIANGLES, 0, sphereVertices.size());
 
-        flatShader.Use();
+        lightSourceShader.Use();
         // Sphere um Lichtquelle zu visualisieren.
         Mat4f lightSphereModelMat = modelMat * Translate(lightPos) * Scale(Vec3f{0.2f, 0.2f, 0.2f});
         glUniformMatrix4fv(0, 1, GL_FALSE, lightSphereModelMat.Data());
@@ -742,7 +742,7 @@ int main(int argc, char** argv)
     /* GL Resources shutdown. */
     skyboxShader.Delete();
     floorShader.Delete();
-    flatShader.Delete();
+    lightSourceShader.Delete();
     envmapShader.Delete();
     glDeleteVertexArrays(1, &VAO_SkyboxCube);
     glDeleteVertexArrays(1, &VAO_LightSphere);
