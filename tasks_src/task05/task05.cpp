@@ -242,10 +242,11 @@ int main(int argc, char** argv)
     glEnableVertexArrayAttrib(VAO_Model, 3);
     glVertexArrayAttribBinding(VAO_Model, 3, 0);
 
-    /* Create camera */
-    Camera camera(Vec3f{ 0.0f, 0.0f, 0.0f }); // inside cube.
-    camera.RotateAroundSide(0.0f);
-    Vec3f cameraPosition = Vec3f{ 0.0f, 0.0f, 0.0f };
+    /* Orbital camera around origin */
+    float orbitTheta  = TO_RAD(90.0f); // polar angle: 90° = equator
+    float orbitPhi    = 0.0f;          // azimuthal angle
+    float orbitRadius = 3.0f;
+    Vec3f cameraPosition = Vec3f{ orbitRadius, 0.0f, 0.0f };
 
     /* Model mat*/
     Mat4f modelMat = Mat4f::Identity();
@@ -347,48 +348,39 @@ int main(int argc, char** argv)
             }
         }
 
-        // TODO: Aufgabe 5.1.3) Kamera
+        // TODO: Aufgabe 5.1.2 Camera Controls
+        /* Orbital camera controls */
         {
-            const float rotateStep = 1.5f;  /* degrees per frame */
-            const float moveStep   = 0.05f; /* units per frame   */
+            const float rotateStep = TO_RAD(1.5f);
+            const float zoomStep   = 0.1f;
 
-            /* Camera movement - Rotation */
-            if ( pRamen->KeyWentDown(SDLK_UP) || pRamen->KeyPressed(SDLK_UP) )
-                /* TODO: Pitch up camera */
-                camera.Pitch(rotateStep);
-            else if ( pRamen->KeyWentDown(SDLK_DOWN) || pRamen->KeyPressed(SDLK_DOWN) )
-                /* TODO: Pitch down camera */
-                camera.Pitch(-rotateStep);
-            else if ( pRamen->KeyWentDown(SDLK_LEFT) || pRamen->KeyPressed(SDLK_LEFT) )
-                /* TODO: Yaw left camera */
-                camera.Yaw(rotateStep);
-            else if ( pRamen->KeyWentDown(SDLK_RIGHT) || pRamen->KeyPressed(SDLK_RIGHT) )
-                /* TODO: Yaw right camera */
-                camera.Yaw(-rotateStep);
-            else if ( pRamen->KeyWentDown(SDLK_E) || pRamen->KeyPressed(SDLK_E) )
-                /* TODO: Roll right camera */
-                camera.Roll(rotateStep);
-            else if ( pRamen->KeyWentDown(SDLK_Q) || pRamen->KeyPressed(SDLK_Q) )
-                /* TODO: Roll left camera */
-                camera.Roll(-rotateStep);
-
-            /* Camera movement - Translation */
-            else if ( pRamen->KeyWentDown(SDLK_W) || pRamen->KeyPressed(SDLK_W) )
-                /* TODO: Move camera forward */
-                camera.DollyForward(moveStep);
+            if ( pRamen->KeyWentDown(SDLK_W) || pRamen->KeyPressed(SDLK_W) )
+                orbitTheta -= rotateStep;
             else if ( pRamen->KeyWentDown(SDLK_S) || pRamen->KeyPressed(SDLK_S) )
-                /* TODO: Move camera backward */
-                camera.DollyForward(-moveStep);
+                orbitTheta += rotateStep;
             else if ( pRamen->KeyWentDown(SDLK_A) || pRamen->KeyPressed(SDLK_A) )
-                /* TODO: Move camera left */
-                camera.DollySide(-moveStep);
+                orbitPhi -= rotateStep;
             else if ( pRamen->KeyWentDown(SDLK_D) || pRamen->KeyPressed(SDLK_D) )
-                /* TODO: Move camera right */
-                camera.DollySide(moveStep);
+                orbitPhi += rotateStep;
+            else if ( pRamen->KeyWentDown(SDLK_UP) || pRamen->KeyPressed(SDLK_UP) )
+                orbitRadius -= zoomStep;
+            else if ( pRamen->KeyWentDown(SDLK_DOWN) || pRamen->KeyPressed(SDLK_DOWN) )
+                orbitRadius += zoomStep;
+
+            // Pole und negativer Radius verhindern
+            const float kPoleEps = 0.01f;
+            if (orbitTheta < kPoleEps)             orbitTheta = kPoleEps;
+            if (orbitTheta > TO_RAD(180.0f) - kPoleEps) orbitTheta = TO_RAD(180.0f) - kPoleEps;
+            if (orbitRadius < 0.5f)                orbitRadius = 0.5f;
+
+            cameraPosition = Vec3f{
+                orbitRadius * sinf(orbitTheta) * cosf(orbitPhi),
+                orbitRadius * cosf(orbitTheta),
+                orbitRadius * sinf(orbitTheta) * sinf(orbitPhi)
+            };
         }
 
         // TODO: Aufgabe 5.2) Environment Mapping
-        cameraPosition = camera.GetPosition();
 
         /* Query new frame dimensions */
         int windowWidth, windowHeight;
@@ -398,8 +390,7 @@ int main(int argc, char** argv)
         glViewport(0, 0, windowWidth, windowHeight);
 
         /* View mat */
-        Mat4f viewMat = LookAt(
-            camera.GetPosition(), camera.GetPosition() + camera.GetForward(), camera.GetUp()); // Mat4f::Identity();
+        Mat4f viewMat = LookAt(cameraPosition, Vec3f{ 0.0f, 0.0f, 0.0f }, Vec3f{ 0.0f, 1.0f, 0.0f });
 
         /* Projection mat */
         float aspect  = (float)windowWidth / (float)windowHeight;
