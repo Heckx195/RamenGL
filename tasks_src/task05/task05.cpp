@@ -369,9 +369,15 @@ int main(int argc, char** argv)
 
             // Pole und negativer Radius verhindern
             const float kPoleEps = 0.01f;
-            if (orbitTheta < kPoleEps)             orbitTheta = kPoleEps;
-            if (orbitTheta > TO_RAD(180.0f) - kPoleEps) orbitTheta = TO_RAD(180.0f) - kPoleEps;
-            if (orbitRadius < 0.5f)                orbitRadius = 0.5f;
+            if (orbitTheta < kPoleEps) { // Blockiert das Überfahren des Nordpols.
+                orbitTheta = kPoleEps;
+            }
+            if (orbitTheta > TO_RAD(180.0f) - kPoleEps) { // Blockiert das Überfahren des Südpols.
+                orbitTheta = TO_RAD(180.0f) - kPoleEps;
+            }
+            if (orbitRadius < 0.5f) { // Blockiert das Überfahren eines minimalen Abstands zum Ursprung
+                orbitRadius = 0.5f;
+            }
 
             cameraPosition = Vec3f{
                 orbitRadius * sinf(orbitTheta) * cosf(orbitPhi),
@@ -381,7 +387,6 @@ int main(int argc, char** argv)
         }
 
         // TODO: Aufgabe 5.2) Environment Mapping
-
         /* Query new frame dimensions */
         int windowWidth, windowHeight;
         SDL_GetWindowSize(pRamen->GetWindow(), &windowWidth, &windowHeight);
