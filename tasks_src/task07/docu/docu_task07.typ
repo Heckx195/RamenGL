@@ -15,10 +15,27 @@ cmake --build build/
 Damit Sie den Schattentest innerhalb der texture()-GLSL-Funkion durchführen können.
 Ausserdem müssen Sie anstatt eines sampler2D einen sampler2DShadow im Fragment-Shadercode für Ihre depthmap-Textur verwenden, damit Sie einen vec3 als Texturkoordinaten an texture() übergeben können.
 
+=== Implementierung
+- Im Fragment-Shader statt den `sampler2D` nimmt man einen `sampler2DShadow` und übergibt an die `texture()`-Funktion einen `vec3` mit den Texturkoordinaten (s, t, r), wobei r der Vergleichswert ist. Der Rückgabewert ist 1.0, wenn der Vergleichswert kleiner oder gleich dem Tiefenwert in der Shadowmap ist (Fragment ist beleuchtet). Ist der Vergleichswert größer als der Tiefenwert in der Shadowmap, ist der Rückgabewert 0.0 (Fragment ist im Schatten).
+- vec3 projCoords
+
+```c
+projCoords.z -= u_BiasAmount; // Bias hinzufügen
+shadow = 1 - texture(u_ShadowMap, projCoords.xyz);
+
+outColor = texColor * (1 - shadow);
+```
+
 #line(length: 100%)
 
 == 7.1) GUI
 Fügen Sie in der GUI eine Checkbox hinzu, mit der Sie PCF an- bzw. ausschalten können.
+
+```c
+ImGui::Checkbox("Aktiviere PCF", &usePCF);
+```
+- Innerhalb vom Fragment-Shader übergibt man ein uniform bool `u_UsePCF`, um zu bestimmen, ob PCF aktiviert ist oder nicht. Je nachdem wird der Schattentest mit oder ohne PCF durchgeführt.
+- In der main wird dann entweder PCF durchgeführt oder der normale einmalige Schattentest
 
 #line(length: 100%)
 
@@ -31,6 +48,21 @@ Testen Sie nun folgendes Szenario bei ausgeschaltetem VSync: Starten Sie Ihr Pro
 - 4096x4096
 - 8192x8192
 Shadowmap Texturgrössen.
+
+=== Implementierung
+- In der main loop wird die Frametime der letzten 60 Sekunden gemittelt und daraus die FPS berechnet, welche dann in der GUI angezeigt wird. Die Mittelung über 60 Sekunden verhindert die starke Schwankung der FPS-Anzeige, was ein sauberes Ablesen verhindert. Die FPS-Anzeige wird in der GUI mit ImGui::Text() dargestellt.
+
+=== Performance
+#table(
+  columns: (auto, auto, auto),
+  table.header([*Shadow Map Größe*], [*FPS ohne PCF*], [*FPS mit PCF*]),
+  [1024×1024], [1850], [1815],
+  [2048×2048], [1880], [1855],
+  [4096×4096], [1850], [1850],
+  [8192×8192], [1950], [1900],
+)
+- Getestet wurde auf einer RTX2080 (8GB VRAM) mit der Standardfenstergröße von 800x600, mit Blick auf einem Schatten. In den Nvidia-Einstellungen wurden die globalen 3D-Einstellungen für die Applikation deaktivert, sodass V-Sync sowie ein FPS-Einschränkung von bspw. 165 FPS deaktiviert waren.
+- Der nicht signifikante Unterschied der FPS-Werte zwischen den Auflösungen und PCF an/aus ist wahrscheinlich darauf zurückzuführen, dass die Berechnungen noch nicht ins Gewicht gefallen sind, sowie durch mögliche versteckten Optimierungen von Nvidia, die wirkliche Leistung der Grafikkarte nicht vollständig ausnutzen. Der Unterschied zwischen den Werten ist wahrscheinlich auf verschiedene Systemlasten zurückzuführen, die während der Tests aufgetreten sind. 
 
 #line(length: 100%)
 
@@ -55,27 +87,9 @@ PCF ermöglicht zwar einen weicheren Übergang am Rand des Schattens, lässt abe
 
 -> *Lösung*: PCF berücksichtigt nicht die Lichtstreuung. In der Realität wird das Licht durch die Atmosphäre und andere Partikel gestreut, was zu weicheren Schatten führt. Dieser Effekt wird durch PCF nicht berücksichtigt, da es nur die Tiefenwerte der Schattenkarte vergleicht und nicht die Lichtstreuung. 
 
-
 #line(length: 100%)
 
-
-== 7.2) Performance
-#table(
-  columns: (auto, auto, auto),
-  table.header([*Shadow Map Größe*], [*FPS ohne PCF*], [*FPS mit PCF*]),
-  [1024×1024], [1850], [1815],
-  [2048×2048], [1880], [1855],
-  [4096×4096], [1850], [1850],
-  [8192×8192], [1950], [1900],
-)
-
-
-
-
-
-
-
--------------
+== Im Bezug auf vorheriger Übung:
 === Renderingartefakt 3.: Shadow/ Light Bleeding
 - Effekt, bei dem fälscherlicherweise Licht in Bereichen auftritt, die eigentlich im Schatten liegen sollten.
 - Tritt auf, wenn die Rest Helligkeit des Halbschattens eines Objekts als Lichtfaktor eines anderen Objekts interpretiert wird, obwohl dieses Objekt eigentlich im Kernschatten liegen sollte. 

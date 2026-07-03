@@ -20,7 +20,7 @@ Wiederverwendung des Würfels aus Aufgabe 03 mit der Änderung, dass die Frontfa
 #line(length: 100%)
 
 == 5.1.1) Erstellen der 3D Textur
-Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`). Diesmal handelt es sich aber um den Typ: `GL_TEXTURE_CUBEMAP`. Diese Texturart erlaubt es Ihnen im Shader mit einem 3D-Richtungsvektor von den sechs Seiten der Cubemap zu samplen. Den Texturspeicher legen Sie mit `glTextureStorage2D` an. Nun können Sie die sechs geladenen Bilder mithilfe der Funktion `glTextureSubImage3D` in den angelegten Speicher der Grafikkarte laden. Nehmen Sie in Ihre Dokumentation mit auf für was die Parameter von `glTextureSubImage3D` stehen und wie Sie vorgegangen sind. 
+Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`). Diesmal handelt es sich aber um den Typ: `GL_TEXTURE_CUBE_MAP`. Diese Texturart erlaubt es Ihnen im Shader mit einem 3D-Richtungsvektor von den sechs Seiten der Cubemap zu samplen. Den Texturspeicher legen Sie mit `glTextureStorage2D` an. Nun können Sie die sechs geladenen Bilder mithilfe der Funktion `glTextureSubImage3D` in den angelegten Speicher der Grafikkarte laden. Nehmen Sie in Ihre Dokumentation mit auf für was die Parameter von `glTextureSubImage3D` stehen und wie Sie vorgegangen sind. 
 
 === Implementierung
 - Zuerst wird mit `glCreateTextures` eine neue Textur vom Typ `GL_TEXTURE_CUBEMAP` mit einer zuvor erstellten TexturID erstellt.

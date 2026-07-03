@@ -55,6 +55,8 @@ void main()
                 // Einmaliges ShadowMap sampeln
                 projCoords.z -= u_BiasAmount; // Bias hinzufügen
                 shadow = 1 - texture(u_ShadowMap, projCoords.xyz);
+                    // z=Tiefenwert des Fragments in LightSpacePos
+                    // vergleich mit gespeicherten Tiefenwert in ShadowMap
             }
         }
     }

@@ -181,8 +181,8 @@ void loadCubemap(
     }
 
     // -> Siehe Doku.
-    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // GL_LINEAR_MIPMAP_LINEAR// NEAREST
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // GL_NEAREST
     glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTextureParameteri(textureID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
