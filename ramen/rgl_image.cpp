@@ -4,14 +4,22 @@
 
 #include <stb_image.h>
 
+#include <assert.h>
+
 #include <stdio.h>
 #include <string.h> /* For memcpy */
 
 Image::Image()
 {
-    m_Width  = 0;
-    m_Height = 0;
-    m_Data   = nullptr;
+    m_Width       = 0;
+    m_Height      = 0;
+    m_NumChannels = 4;
+    m_Data        = nullptr;
+}
+
+Image::Image(size_t width, size_t height, size_t numChannels)
+{
+    Init(width, height, numChannels);
 }
 
 Image::~Image()
@@ -45,6 +53,22 @@ bool Image::Load(const char* file)
     stbi_image_free(data);
 
     return true;
+}
+
+void Image::Init(size_t width, size_t height, size_t numChannels)
+{
+    m_Width       = width;
+    m_Height      = height;
+    m_NumChannels = numChannels;
+    m_Data        = (unsigned char*)malloc(width * height * numChannels);
+    memset(m_Data, 0, width * height * numChannels);
+}
+
+void Image::SetPixel32ABGR(size_t x, size_t y, uint32_t value)
+{
+    assert(m_Data != nullptr);
+    uint32_t* pixel = (uint32_t*)(m_Data + (y * 4 * m_Width + x * 4));
+    *pixel          = value;
 }
 
 int Image::GetWidth()

@@ -33,6 +33,25 @@ bool Shader::Load(const char* vertShaderFile, const char* fragShaderFile)
     return true;
 }
 
+bool Shader::Load(const char* shaderFile, GLenum shaderType)
+{
+    Filesystem* pFS        = Filesystem::Instance();
+    File        shaderData = pFS->Read(shaderFile);
+    GLuint      shader;
+
+    if ( !CompileShader(shaderData, &shader, shaderType) )
+    {
+        fprintf(stderr, "Failed to compile shader: '%s'\n", shaderFile);
+        return false;
+    }
+    m_Program = glCreateProgram();
+    glAttachShader(m_Program, shader);
+    glLinkProgram(m_Program);
+    glDeleteShader(shader);
+
+    return true;
+}
+
 void Shader::Use()
 {
     glUseProgram(m_Program);

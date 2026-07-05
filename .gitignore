@@ -9,6 +9,8 @@
 !/dependencies/stb_image.h
 !/dependencies/imgui/
 !/dependencies/imgui/**
+!/dependencies/xatlas/
+!/dependencies/xatlas/**
 !/assets/shaders/
 !/assets/shaders/**
 imgui.ini
