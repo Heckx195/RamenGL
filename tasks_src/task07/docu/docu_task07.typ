@@ -96,3 +96,20 @@ PCF ermöglicht zwar einen weicheren Übergang am Rand des Schattens, lässt abe
 
 ==== Lösung: Percentage Closer Filtering (PCF)
 - PCF kann genutzt werden, um den Fehler zu kaschieren.
+
+#line(length: 100%)
+
+= Ergebnis
+#figure(
+  grid(
+    columns: 2,
+    column-gutter: 1em,
+    row-gutter: 0.5em,
+    image("./task07_result.png"), image("./task07_resultPCF.png"),
+    align(
+      center,
+    )[(a) Schatten ohne PCF],
+    align(center)[(b) Schatten mit PCF],
+  ),
+  caption: [Vergleich zwischen mit und ohne PCF],
+)
