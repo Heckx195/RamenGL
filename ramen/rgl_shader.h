@@ -50,6 +50,23 @@ class Shader
         return true;
     }
 
+    bool IsLinked(GLuint program)
+    {
+        GLint status;
+        glGetProgramiv(program, GL_LINK_STATUS, &status);
+        if ( status != GL_TRUE )
+        {
+            char buffer[ 512 ];
+            memset(buffer, 0, 512);
+            glGetProgramInfoLog(program, 511, nullptr, buffer);
+            printf("GLSL link error:\n%s\n", buffer);
+
+            return false;
+        }
+
+        return true;
+    }
+
   private:
     GLuint m_Program;
 };

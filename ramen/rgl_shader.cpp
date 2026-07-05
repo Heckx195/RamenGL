@@ -30,6 +30,12 @@ bool Shader::Load(const char* vertShaderFile, const char* fragShaderFile)
     glDeleteShader(vertShader);
     glDeleteShader(fragShader);
 
+    if ( !IsLinked(m_Program) )
+    {
+        fprintf(stderr, "Failed to link shader program: '%s' + '%s'\n", vertShaderFile, fragShaderFile);
+        return false;
+    }
+
     return true;
 }
 
@@ -48,6 +54,12 @@ bool Shader::Load(const char* shaderFile, GLenum shaderType)
     glAttachShader(m_Program, shader);
     glLinkProgram(m_Program);
     glDeleteShader(shader);
+
+    if ( !IsLinked(m_Program) )
+    {
+        fprintf(stderr, "Failed to link shader program: '%s'\n", shaderFile);
+        return false;
+    }
 
     return true;
 }

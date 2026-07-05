@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stb_image.h>
 
 #include <deque>
@@ -472,6 +473,66 @@ int main(int argc, char** argv)
     glEnableVertexArrayAttrib(VAO_Sphere, 3);
     glVertexArrayAttribBinding(VAO_Sphere, 3, 0);
 
+    // Aufgabe 8.1) Normalmapping: Plane-Modell laden.
+    Model unitplaneModel{};
+    if ( !unitplaneModel.Load("models/unitplane.obj") )
+    {
+        fprintf(stderr, "Could not load unitplane model file.\n");
+    }
+
+    GLuint VBO_UnitPlane;
+    glCreateBuffers(1, &VBO_UnitPlane);
+    glNamedBufferData(VBO_UnitPlane, unitplaneModel.NumVertices() * sizeof(Vertex), unitplaneModel.GetVertices().data(), GL_STATIC_DRAW);
+
+    // Aufgabe 8.1) Normalmapping: Normalmap-Textur laden.
+    // Flip Bild, weil openGL Texturkoordinaten (0,0) = Bildunterkante, aber die Normalmap (Gruen-Kanal) erwartet (0,0) = Bildoberkante.
+    stbi_set_flip_vertically_on_load(true);
+    Image image_NormalMap{};
+    if ( !image_NormalMap.Load("textures/rock-wall-mortar-bl/rock-wall-mortar_normal-ogl.png") )
+    {
+        fprintf(stderr, "Could not load normal map texture file.\n");
+    }
+    stbi_set_flip_vertically_on_load(false);
+
+    GLuint textureHandleNormalMap;
+    glCreateTextures(GL_TEXTURE_2D, 1, &textureHandleNormalMap);
+    glTextureParameteri(textureHandleNormalMap, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(textureHandleNormalMap, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(textureHandleNormalMap, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(textureHandleNormalMap, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureStorage2D(textureHandleNormalMap, 1, GL_RGBA8, image_NormalMap.GetWidth(), image_NormalMap.GetHeight());
+    glTextureSubImage2D(
+        textureHandleNormalMap, 0, 0, 0, image_NormalMap.GetWidth(), image_NormalMap.GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, image_NormalMap.Data()
+    );
+
+    GLuint VAO_UnitPlane;
+    glCreateVertexArrays(1, &VAO_UnitPlane);
+    glVertexArrayVertexBuffer(VAO_UnitPlane, 0, VBO_UnitPlane, 0, sizeof(Vertex));
+    /* Position */ // Position is at offset 0
+    glVertexArrayAttribFormat(VAO_UnitPlane, 0, 3, GL_FLOAT, GL_FALSE, 0);
+    glEnableVertexArrayAttrib(VAO_UnitPlane, 0);
+    glVertexArrayAttribBinding(VAO_UnitPlane, 0, 0);
+    /* Normal */ // Normal is at offset 3 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_UnitPlane, 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_UnitPlane, 1);
+    glVertexArrayAttribBinding(VAO_UnitPlane, 1, 0);
+    /* Color */ // Color is at offset 6 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_UnitPlane, 2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_UnitPlane, 2);
+    glVertexArrayAttribBinding(VAO_UnitPlane, 2, 0);
+    /* uv */ // uv is at offset 9 * bytes size(float)
+    glVertexArrayAttribFormat(VAO_UnitPlane, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_UnitPlane, 3);
+    glVertexArrayAttribBinding(VAO_UnitPlane, 3, 0);
+    /* normalmap */ // xyz coordinates for the tangent vector.
+    glVertexArrayAttribFormat(VAO_UnitPlane, 4, 3, GL_FLOAT, GL_FALSE, 12 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_UnitPlane, 4);
+    glVertexArrayAttribBinding(VAO_UnitPlane, 4, 0);
+    /* normalmap */ // xyz coordinates for the bitangent vector.
+    glVertexArrayAttribFormat(VAO_UnitPlane, 5, 3, GL_FLOAT, GL_FALSE, 15 * sizeof(float));
+    glEnableVertexArrayAttrib(VAO_UnitPlane, 5);
+    glVertexArrayAttribBinding(VAO_UnitPlane, 5, 0);
+
     /* Some global GL states */
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -501,6 +562,8 @@ int main(int argc, char** argv)
     Vec3f lightAmbient{ 0.1f, 0.1f, 0.1f };
     Vec3f lightDiffuse{ 0.8f, 0.8f, 0.8f };
     Vec3f lightSpecular{ 1.0f, 1.0f, 1.0f };
+
+    bool useBumpMapping = false;
 
     /* Main loop */
     bool isRunning = true;
@@ -616,6 +679,7 @@ int main(int argc, char** argv)
         ImGui::Checkbox("Aktiviere Textur für Boden", &useFloorTexture);
         ImGui::Checkbox("Aktiviere Bias (verhindert Shadow Acne)", &useBias);
         ImGui::Checkbox("Aktiviere PCF", &usePCF);
+        ImGui::Checkbox("Aktiviere Bumpmapping", &useBumpMapping);
         if (useBias)
             ImGui::DragFloat("Bias-Wert (0.0001=gut, >0.001=Peter Panning)", &biasAmount, 0.000001f, 0.0f, 0.01f, "%.6f");
         ImGui::DragFloat3("Lichtposition", lightPos.Data(), 0.1f);
@@ -794,9 +858,30 @@ int main(int argc, char** argv)
         glUniform3fv(9, 1, (materialSpecular * lightSpecular).Data());
         glUniform1f(10, shininess);
         glUniform1f(11, reflectivity);
+        glUniform1i(12, 0);  // u_UseBumpMapping - VAO besitzt beim Skull kein Tangent und Bitangent
         glBindVertexArray(VAO_Model);
         glBindTextureUnit(0, textureHandleCubemap);
         glDrawArrays(GL_TRIANGLES, 0, model.NumVertices());
+
+        phongShader.Use();
+        Mat4f unitplaneModelMat = modelMat * Translate(Vec3f{3.0f, 0.0f, 0.0f}) * Scale(Vec3f{1.5f, 1.5f, 1.5f}) * Rotate(Vec3f{1.0f, 0.0f, 0.0f}, 90.0f);
+        glUniformMatrix4fv(0, 1, GL_FALSE, unitplaneModelMat.Data());
+        glUniformMatrix4fv(1, 1, GL_FALSE, viewMat.Data());
+        glUniformMatrix4fv(2, 1, GL_FALSE, projMat.Data());
+        glUniform1i(3, usePhongShading ? 1 : 0);  // u_UsePhongShading
+        glUniform3fv(4, 1, lightPos.Data());
+        glUniform3fv(5, 1, cameraPosition.Data());
+        glUniform3fv(6, 1, materialEmissive.Data());
+        glUniform3fv(7, 1, (materialAmbient * lightAmbient).Data()); // Optimierung
+        glUniform3fv(8, 1, (materialDiffuse * lightDiffuse).Data());
+        glUniform3fv(9, 1, (materialSpecular * lightSpecular).Data());
+        glUniform1f(10, shininess);
+        glUniform1f(11, reflectivity);
+        glUniform1i(12, useBumpMapping ? 1 : 0);  // u_UseBumpMapping
+        glBindVertexArray(VAO_UnitPlane);
+        glBindTextureUnit(0, textureHandleCubemap);
+        glBindTextureUnit(1, textureHandleNormalMap);
+        glDrawArrays(GL_TRIANGLES, 0, unitplaneModel.NumVertices());
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

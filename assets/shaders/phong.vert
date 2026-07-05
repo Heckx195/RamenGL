@@ -2,10 +2,16 @@
 
 layout(location = 0) in vec3 in_Position;
 layout(location = 1) in vec3 in_Normal;
+layout(location = 3) in vec2 in_UV;
+layout(location = 4) in vec3 in_Tangent;
+layout(location = 5) in vec3 in_Bitangent;
 
 layout(location = 0) out vec3 out_WorldPos;
 layout(location = 1) out vec3 out_WorldNormal;
-layout(location = 2) out vec3 out_color;
+layout(location = 2) out vec3 out_Color;
+layout(location = 3) out vec2 out_UV;
+layout(location = 4) out vec3 out_WorldTangent;
+layout(location = 5) out vec3 out_WorldBitangent;
 
 layout(location = 0) uniform mat4 u_ModelMat;
 layout(location = 1) uniform mat4 u_ViewMat;
@@ -28,13 +34,14 @@ void main()
    
     vec4 worldPos = u_ModelMat * vec4(in_Position, 1.0f);
     out_WorldPos = worldPos.xyz;
-    out_WorldNormal = mat3(u_ModelMat) * in_Normal;
+    out_WorldNormal = normalize(mat3(u_ModelMat) * in_Normal);
+    out_UV = in_UV;
 
-    if (u_usePhongShading)
-    {
-        // Phong Shading: Normale interpolieren lassen
-    }
-    else
+    // Tangent und Bitangent in Weltkoordinaten transformieren
+    out_WorldTangent = normalize(mat3(u_ModelMat) * in_Tangent);
+    out_WorldBitangent = normalize(mat3(u_ModelMat) * in_Bitangent);
+
+    if (!u_usePhongShading) // Gourad Shading
     {
         // Gouraud Shading: Normale pro Vertex berechnen
         // emissive
@@ -54,8 +61,7 @@ void main()
         float spekular = max(dot(H, N), 0.0);
         spekular = pow(spekular, u_shininess);
 
-        out_color = emissive + ambient + diffus * u_materialLightDiffuse + spekular * u_materialLightSpecular;
-            // u_materialLightDiffuse = sorgt dafür das ein rotes Material auch nur rotes Licht reflektiert
+        out_Color = emissive + ambient + diffus * u_materialLightDiffuse + spekular * u_materialLightSpecular;
+            // u_materialLightDiffuse = sorgt dafür, dass ein rotes Material auch nur rotes Licht reflektiert
     }
-
 }
