@@ -49,7 +49,7 @@ out_color = emissive + ambient + diffus * u_materialLightDiffuse + spekular * u_
 ```
 
 Fragment-Shader:
-- Für Gouraud-Shading wird die berechnete und interpolierte Farbe über die OpenGL-Funktion mix() mit der Farbe des reflektierten Cubemap-Lichts gemischt, um die finale Fragmentfarbe zu berechnen
+- Für Gouraud-Shading wird die berechnete und interpolierte Farbe über die GLSL-Funktion mix() mit der Farbe des reflektierten Cubemap-Lichts gemischt, um die finale Fragmentfarbe zu berechnen
 - Für Phong-Shading wird die Beleuchtungsberechnung im Fragment-Shader durchgeführt, wobei die interpolierten Normalenvektoren verwendet werden. Das Ergebnis wird dann mit der Farbe des reflektierten Cubemap-Lichts gemischt, um die finale Fragmentfarbe zu berechnen. Der gezeigte Code-Block ist identisch mit dem im Vertex-Shader, nur dass die interpolierten Normalenvektoren verwendet werden.
   - Der Vor- und Nachteil von Phong-Shading ist, dass es eine detailliertere Beleuchtung ermöglicht, aber auch mehr Rechenleistung benötigt, da die Beleuchtungsberechnung pro Fragment durchgeführt wird.
 
@@ -115,7 +115,7 @@ einer Normalmap.
 
 === Implementierung
 - Es wird zuerst die unitplane als Objekt geladen und die dazuliegende Normalmap als Textur geladen.
-  - Wichtig dabei ist es, die Normalmap-Textur vertikal zu spiegeln, da die V-Achse der Normalmap (Grün-Kanal) Zeile 0 = Bildunterkante erwartet, während die Textur von stb_image Zeile 0 = Bildoberkante liefert. Dies wird mit der Funktion `stbi_set_flip_vertically_on_load(true)` erreicht (unmittelbar vor dem `Load()`-Aufruf gesetzt und danach wieder zurückgesetzt, da das Flag global für stb_image gilt).
+  - Wichtig dabei ist es, die Normalmap-Textur vertikal zu spiegeln, da OpenGLs Texturkoordinaten Zeile 0 = Bildunterkante erwarten, während stb_image die Bilddaten mit Zeile 0 = Bildoberkante liefert. Dies wird mit der Funktion `stbi_set_flip_vertically_on_load(true)` erreicht (unmittelbar vor dem `Load()`-Aufruf gesetzt und danach wieder zurückgesetzt, da das Flag global für stb_image gilt).
 - Die Normalmap-Textur wird mit diesen Parametern initialisiert:
 ```c
 glTextureParameteri(textureHandleNormalMap, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -202,7 +202,7 @@ Wie würde man die vier Terme (Materialeigenschaften k_e, k_a, k_d, k_s) zu eine
 Wie kombiniert man die Reflectivity der Cubemap-Umgebung mit der Phong-Blinn-beleuchteten Materialfarbe? Welche Faktoren werden dabei berücksichtigt? Wie berechnet man daraus eine finale Fragmentfarbe?
 
 -> *Lösung*:
-- Dafür wird die OpenGL-Funktion mix(litColor, reflectionColor, reflectivity) benutzt, um eine gewichtete Mischung zu erreichen. Eine spiegelnde Fläche sollte weiterhin die Umgebung spiegeln, auch wenn sie im Schatten liegt.
+- Dafür wird die GLSL-Funktion mix(litColor, reflectionColor, reflectivity) benutzt, um eine gewichtete Mischung zu erreichen. Eine spiegelnde Fläche sollte weiterhin die Umgebung spiegeln, auch wenn sie im Schatten liegt.
 
 === Frage 5.:
 Wann muss ein Vektor normalisiert werden?

@@ -599,7 +599,7 @@ int main(int argc, char** argv)
         ImGui::Begin("Lightmap Debugger");
         {
             ImGui::SliderInt("# Bunces", (int*)&numBounces, 0, 50);
-            ImGui::SliderInt("# Iterations", (int*)&numIterations, 0, 500);
+            ImGui::SliderInt("# Iterations", (int*)&numIterations, 0, 5000); // 500
             if ( ImGui::Button("Recompute Lightmap") )
             {
                 recomputeLightmap   = true;

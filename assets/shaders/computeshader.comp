@@ -106,55 +106,64 @@ bool RayTriangleIntersect(vec3 rayOrigin, vec3 rayDir, vec3 v0, vec3 v1, vec3 v2
 {
     vec3 edge1 = v1 - v0;
     vec3 edge2 = v2 - v0;
-    vec3 h = cross(rayDir, edge2); // h = Richtungsvektor der Ebene, die durch den Strahl und die Kante v0-v2 aufgespannt wird.
-    float a = dot(edge1, h); // a = Skalarprodukt der beiden Richtungsvektoren der Ebene
+
+    // Schritt 1: Ebenen-Schnittpunkt
+    // Zuerst prüfen, ob der Strahl die Dreiecksebene überhaupt treffen kann (nicht parallel dazu liegt).
+    vec3 h = cross(rayDir, edge2);
+        // h = Richtungsvektor der Ebene, die durch den Strahl und die Kante v0-v2 aufgespannt wird.
+    float a = dot(edge1, h);
+        // a = Skalarprodukt der beiden Richtungsvektoren der Ebene
 
     // a ~= 0 bedeutet: rayDir liegt in der Dreiecksebene (parallel dazu) -> kein Schnittpunkt möglich.
     if (abs(a) < 1e-6)
-        return false; // Ray is parallel to triangle
+        return false;
 
-    float f = 1.0 / a; // f = 1/a, um die Divisionen zu vermeiden und stattdessen Multiplikationen zu verwenden (schneller).
+    // Um Division zu vermeiden, Multiplikation verwenden
+    float f = 1.0 / a; // Kehrwert von a
     vec3 s = rayOrigin - v0; // Vektor vom ersten Dreieckseckpunkt zum Strahlursprung.
 
+    // Schritt 2 (Early-Exit): Baryzentrischer Test (1/2 - Koordinate u)
     // Erste baryzentrische Koordinate. Liegt sie außerhalb [0, 1],
     // liegt der Schnittpunkt der Ebene außerhalb der Kante v0-v1 -> kein Treffer im Dreieck.
     u = f * dot(s, h); // u = baryzentrische Koordinate entlang der Kante v0-v1
     if (u < 0.0 || u > 1.0)
         return false; // Liegt außerhalb [0, 1]
 
-    vec3 q = cross(s, edge1); // q = Richtungsvektor der Ebene, die durch den Strahl und die Kante v0-v1 aufgespannt wird.
+    // q = Richtungsvektor der Ebene, die durch den Strahl und die Kante v0-v1 aufgespannt wird.
+    vec3 q = cross(s, edge1);
 
+    // Schritt 2 (Early-Exit): Baryzentrischer Test (2/2 - Koordinate v)
     // Zweite baryzentrische Koordinate. u + v > 1 würde bedeuten, der Punkt liegt
     // jenseits der Kante v1-v2 -> ebenfalls kein Treffer im Dreieck.
     v = f * dot(rayDir, q); // v = baryzentrische Koordinate entlang der Kante v0-v2
     if (v < 0.0 || u + v > 1.0)
         return false;
 
-    // Beide baryzentrischen Tests bestanden -> Schnittpunkt liegt im Dreieck.
-    // Jetzt Distanz entlang des Strahls berechnen.
+    // Schritt 1b: Ebenen-Schnittpunkt fertig berechnen
+    // Beide baryzentrischen Tests (Schritt 2) bestanden -> Schnittpunkt liegt im Dreieck.
+    // Jetzt erst die Distanz t entlang des Strahls berechnen (das eigentliche Ergebnis von Schritt 1).
     t = f * dot(edge2, q);
 
-    // t > 0 (mit Epsilon statt exakt 0, wegen Fließkomma-Ungenauigkeit und um
-    // Selbstschnitte mit der eigenen Ausgangsfläche bei späteren Bounces zu vermeiden).
+    // t > 0, mit Epsilon statt exakt 0, wegen Fließkomma-Ungenauigkeit
     return t > 1e-6; // Intersection occurs in front of the ray origin
 }
 
 HitInfo FindClosestHit(vec3 rayOrigin, vec3 rayDir, vec3 patchNormal)
 {
     HitInfo closest;
-    closest.hit = false; // solange kein Dreieck getroffen wurde, bleibt das so
-    float currentT = 1e30; // Start with a too large value for the scene
+    closest.hit = false;
+    float currentT = 1e30; // Extrem grosser Startwert, um ueberschrieben zu werden
 
     for (int i = 0; i < int(u_NumTris); ++i)
     {
-        // Dreieck i holen, Indizes holen, Vertex-Positionen holen
+        // Dreieck i holen -> Indizes holen -> Vertex-Positionen holen
         Triangle tri = trianglesIN[i];
         vec3 v0 = verticesIN[tri.indices.x].position.xyz;
         vec3 v1 = verticesIN[tri.indices.y].position.xyz;
         vec3 v2 = verticesIN[tri.indices.z].position.xyz;
 
+        // if ray intersects a triangle
         float t, u, v;
-        // if ray intersects closest triangle
         if (RayTriangleIntersect(rayOrigin + patchNormal*0.001, rayDir, v0, v1, v2, t, u, v))
         {
             if (t < currentT)
@@ -195,18 +204,21 @@ HitInfo FindClosestHit(vec3 rayOrigin, vec3 rayDir, vec3 patchNormal)
     return closest;
 }
 
-// Farbe des "Himmels" -- unsere einzige Lichtquelle. Wird nur dann in die Radiance
-// eingerechnet, wenn ein Ray tatsaechlich entkommt (siehe Schleife unten).
+// Verfolgt einen Ray ueber mehrere Bounces und gibt die daraus resultierende Radiance zurueck
 const vec3 c_SkyColor = vec3(1.0f);
-
-// Iterative Monte-Carlo-Bounce-Schleife (keine Rekursion moeglich in Shadern).
-// Verfolgt einen Ray ueber mehrere Bounces und gibt die daraus resultierende Radiance zurueck.
-vec3 TraceBounces(vec3 startOrigin, vec3 startDir, vec3 startNormal, inout uint rngState)
+vec3 TraceBounces(
+    vec3 startOrigin, // Startpunkt des Rays (Patch-Position)
+    vec3 startDir, // Start-Richtung des Rays (zufaellige Richtung innerhalb der Hemisphaere)
+    vec3 startNormal, // Normale des Patches
+    inout uint rngState // Für zufaellige Richtungen bei den Bounces
+    )
 {
-    vec3 throughput = vec3(1.0f); // sammelt multiplikativ die Materialfarben aller bisherigen Treffer
+    vec3 throughput = vec3(1.0f); // Sammelt multiplikativ die Materialfarben aller bisherigen Treffer
+    
+    // Siehe Parameterliste: Startpunkt, Start-Richtung und Start-Normale des Rays
     vec3 currentOrigin = startOrigin;
     vec3 currentDir = startDir;
-    vec3 currentNormal = startNormal; // fuer den Selbstschnitt-Offset in FindClosestHit
+    vec3 currentNormal = startNormal;
 
     for (uint bounce = 0u; bounce < u_NumBounces; ++bounce)
     {
@@ -229,12 +241,10 @@ vec3 TraceBounces(vec3 startOrigin, vec3 startDir, vec3 startNormal, inout uint 
         currentDir = RandomUnitVector(rngState);
         if (dot(currentDir, currentNormal) < 0.0f)
         {
-            currentDir = -currentDir;
+            currentDir = -currentDir; // Dreht Ray-Richtung um, falls nach unten zeigt
         }
 
-        // Lambertsches Kosinusgesetz: Da wir uniform (nicht kosinus-gewichtet) ueber die
-        // Hemisphaere samplen, muss der Kosinus-Term explizit in den Monte-Carlo-Schaetzer
-        // eingerechnet werden -- sonst tragen streifende Winkel faelschlich zu viel bei.
+        // Kosinus-Term in die "throughput"-Variable einrechnen
         float cosTheta = max(dot(currentDir, currentNormal), 0.0f);
         throughput *= cosTheta;
     }
@@ -262,14 +272,10 @@ void main()
     /* Get patch for current workitem. */
     Patch p = patches_read[patch_index];
 
-    /* Dieses Texel gehört zu keinem echten Patch (Lücke/Padding im UV-Atlas).
-     * Echte Patches haben immer eine normalisierte Normale (Länge ~1); nie beschriebene
-     * Patches bleiben beim memset() auf vec3(0) stehen (Länge 0). area.x eignet sich NICHT
-     * dafür, da sie bei sehr kleinen UV-Dreiecken durch Int-Truncation auch bei gültigen
-     * Patches 0 werden kann. */
-    if (dot(p.normal.xyz, p.normal.xyz) < 0.01f)
+    // Early Exit: Ungültiges Patch, wenn normal zu klein
+    if (length(p.normal.xyz) < 0.1f)
     {
-        p.radiance = vec4(0.0f, 0.0f, 0.0f, 1.0f); // Kein Sample -> Schwarz
+        p.radiance = vec4(0.0f, 0.0f, 0.0f, 1.0f); // Kein Sample = Schwarz
         patches_write[patch_index] = p;
         imageStore(u_LightmapTexture, ivec2(gl_GlobalInvocationID.xy), p.radiance);
         return;
@@ -282,17 +288,18 @@ void main()
         rand_dir = -rand_dir;
     }
 
-    // Gewichtet mit Lambert das erste Sample, das das Patch verlässt, mit dem Kosinus des Winkels zwischen 
+    // Initial Lambert-Gewichtung für das erste Sample, dass das Patch verlässt
     float initialCosTheta = max(dot(rand_dir, p.normal.xyz), 0.0f);
 
-    /* Ein Sample: Ray ueber bis zu u_NumBounces Bounces verfolgen und die resultierende Radiance holen. */
+    // Ray ueber bis zu u_NumBounces Bounces verfolgen und die resultierende Radiance holen
     vec3 sampleRadiance = initialCosTheta * TraceBounces(p.worldpos.xyz, rand_dir, p.normal.xyz, rngState);
 
-    /* Laufenden Mittelwert ueber alle bisherigen Samples bilden (ein Dispatch = ein neues Sample).
-     * u_FrameNum ist 0-basiert und zaehlt hoch, seit zuletzt zurueckgesetzt wurde. */
+    // Laufenden Mittelwert ueber alle bisherigen Samples bilden (ein Dispatch = ein neues Sample).
     float sampleCount = float(u_FrameNum) + 1.0f;
     vec3 previousRadiance = p.radiance.rgb;
     vec3 newRadiance = previousRadiance + (sampleRadiance - previousRadiance) / sampleCount; // Auf bestehenden Mittelwert aufaddieren
+    
+    // Neuen Radiance-Wert in Patch schreiben
     p.radiance = vec4(newRadiance, 1.0f);
     patches_write[patch_index] = p;
 

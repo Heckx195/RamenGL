@@ -17,7 +17,7 @@ Eckpunkte eines quadratischen Bildes den Vertices zugeordnet werden.
 === Lösung
 - Texturkoordinaten so erstellen, dass die UV-Koordinaten von oben links (0,0) nach unten rechts (1,1) verlaufen. Wenn (0,0) oben links ist, dann steht die Textur auf dem Kopf.
 - Der Unterschied kommt daher, da Bildformate (PNG, JPEG) die Pixel von oben links nach unten rechts speichern, während OpenGL die UV-Koordinaten standardmäßig von unten links nach oben rechts interpretiert
- - Man kann die Texturkoordinaten anpassen oder beim Laden des Bildes eine Flip durchführen, um die Textur korrekt darzustellen.
+ - Man kann die Texturkoordinaten anpassen oder beim Laden des Bildes einen Flip durchführen, um die Textur korrekt darzustellen.
 
 == 4.2) Erstellen einer OpenGL Textur auf der GPU
 Finden Sie heraus, was die einzelnen Befehle bewirken und nehmen Sie
@@ -34,7 +34,7 @@ void glCreateTextures(
 
 - target: Der Typ der zu erzeugenden Textur-Objekte (z.B. GL_TEXTURE_2D).
 - n: Anzahl der zu erzeugenden Textur-Objekte.
-- \*textures: Zeiger auf ein Array, in dem die Namen (Ids, wie VBO/VBA oder Handlers) der neuen Textur-Objekte gespeichert werden.
+- \*textures: Zeiger auf ein Array, in dem die Namen (Ids, wie VBO/VAO oder Handlers) der neuen Textur-Objekte gespeichert werden.
 
 Wird verwendet, um ein oder mehrere Textur-Objekte als Speicherbereiche auf der GPU zu erzeugen.
 
@@ -77,13 +77,13 @@ void glTextureStorage2D(
 ```
 
 - target: Der Typ der Textur (z.B. GL_TEXTURE_2D).
-- levels: Anzahl der Mipmap-Level, die für die Textur reserviert werden sollen (0 für keine Mipmaps, 1 für nur die Basis-Textur, >1 für mehrere Mipmap-Level).
+- levels: Anzahl der Mipmap-Level, die für die Textur reserviert werden sollen (muss mindestens 1 sein; 1 für nur die Basis-Textur ohne weitere Mipmaps, >1 für mehrere Mipmap-Level).
 - internalformat: Das interne Format der Textur (z.B. GL_RGBA8, GL_RGB8).
 - width: Breite der Textur in Pixeln.
 - height: Höhe der Textur in Pixeln.
 
 Reserviert unveränderlichen Speicher auf der GPU für die Textur und legt Format, Auflösung und Anzahl der Mipmap-Level fest. Es werden noch keine Pixeldaten hochgeladen.
-MipMap sind vorberechnete, verkleinerte Versionen der Textur, die abhängig der Entfernung zur Kamera geladen werden. Wenn die Kamera weitentfernt ist, wird eine kleinere weniger detaillierte MipMap-Version der Textur verwendet, um die Leistung zu verbessern.
+Mipmaps sind vorberechnete, verkleinerte Versionen der Textur, die abhängig von der Entfernung zur Kamera geladen werden. Wenn die Kamera weit entfernt ist, wird eine kleinere, weniger detaillierte Mipmap-Version der Textur verwendet, um die Leistung zu verbessern.
 
 ```c
 void glTextureSubImage2D(
@@ -113,7 +113,7 @@ Lädt Pixeldaten von der CPU in den zuvor reservierten GPU-Speicher. Ermöglicht
 
 == 4.3) Zugänglich machen der Texturkoordinaten im Shader
 'Verdrahten' Sie nun das Texturkoordinaten-Attribut über das VAO
-mit dem Vertex-Shader, sodass die Texturkoordinaten in diesem verfügbar werden. Ermöglichen Sie ausserdem
+mit dem Vertex-Shader, sodass die Texturkoordinaten in diesem verfügbar werden. Ermöglichen Sie außerdem
 die Weiterleitung der Texturkoordinaten aus dem Vertex- in den Fragment-Shader.
 
 === Lösung
@@ -151,7 +151,7 @@ auf dem Kopf steht, versuchen Sie zu verstehen, warum es passt.
 Nehmen Sie die Erkenntnisse in Ihre Dokumentation mit auf.
 
 -> *Lösung*:
-- Texturkoordinaten wurden so erstellt, dass die UV-Koordinaten von unten links (0, 0) nach oben rechts (1, 1) verlaufen. Die Textur steht aktuell auf dem Kopf. Wenn man aber (0, 0) auf oben links ändert und (1, 1) auf unten rechts, steht die Textur korrekt herum. Das liegt daran, dass Textur-Koordinaten standardmaessig von oben links nach unten rechts verlaufen.
+- Texturkoordinaten wurden so erstellt, dass die UV-Koordinaten von unten links (0, 0) nach oben rechts (1, 1) verlaufen. Die Textur steht aktuell auf dem Kopf. Wenn man aber (0, 0) auf oben links ändert und (1, 1) auf unten rechts, steht die Textur korrekt herum. Das liegt daran, dass Bilddateien ihre Pixel standardmäßig von oben links nach unten rechts speichern, während OpenGL die UV-Koordinaten von unten links ausgehend interpretiert (siehe 4.1).
 
 #line(length: 100%)
 

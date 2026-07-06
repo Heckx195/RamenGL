@@ -16,48 +16,93 @@ cmake --build build/
 === Implementierung
 - Keine Rekursion im Compute-Shader, da sonst ein Call-Stack benötigt wird, der auf Grafikkarten, wo Millionen von Threads gleichzeitig laufen, nicht praktikabel ist. Stattdessen wird die Rekursion in eine Schleife umgewandelt, die die Strahlen (Rays) solange verfolgt, bis sie auf eine Oberfläche treffen oder die maximale Anzahl an Bounces erreicht ist.
 
-Im Compute-Shader:
-- RayTriangleIntersect():
-  - Schritt 1. (Ebenen-Schnittpunkt): Schaut ob der Strahl die Ebene des Dreiecks schneidet. Wenn nicht, wird sofort abgebrochen (Early Exit).
-  - Schritt 2. (Baryzentrischer Test): Wenn die Ebene getroffen wird, wird überprüft, ob der Schnittpunkt innerhalb des Dreiecks liegt. Wenn nicht, wird ebenfalls abgebrochen (Early Exit).
-- FindClosestHit():
-  - Iteriert über alle Dreiecke der Szene und ruft RayTriangleIntersect() auf, um den nächsten Schnittpunkt zu finden. Interpoliert die Informationen des nächsten Trefferpunkts basierend auf den baryzentrischen Koordinaten (Position, Normale, Farbe) und speichert die Informationen in einer HitInfo-Struktur.
+*Compute-Shader*:
+main():
+- Ein Durchlauf der main steht für eine Iteration/ Sample eines Patches
+- Es wird ein Strahl (Ray) von der Oberfläche in eine zufällige Richtung innerhalb der Hemisphäre um die Oberflächennormale ausgesendet
+- Dies passiert in der Methode TraceBounces()
+  
+TraceBounces():
+- Verfolgt den Strahl (Ray) solange, bis er auf eine Licht-Oberfläche trifft oder die maximale Anzahl an Bounces erreicht ist (in dem Fall wird der Strahl verworfen).
+- Bei jedem Bounce wird die Radiance (gewichtet durch Lambert) des getroffenen Patches in der Variable `throughput` aufmultipliziert. Wenn die Lichtquelle (Himmel) getroffen wurde, wird die aufmultiplizierte Radiance mit der Lichtfarbe verrechnet und zurückgegeben.
+- Für jeden Bounce wird die Methode FindClosestHit() aufgerufen, um den nächsten Schnittpunkt des Rays mit der Szene zu finden
+- Abschließend wird über einen Randomizer eine neue zufällige Richtung für einen neuen Ray innerhalb der Hemisphäre erzeugt (Monte-Carlo Sampling) und die Schleife wiederholt.
 
-```c
+FindClosestHit():
+- Iteriert über alle Dreiecke der Szene und ruft RayTriangleIntersect() auf, um den nächsten Schnittpunkt zu finden.
+- Interpoliert die Informationen des nächsten Trefferpunkts basierend auf den baryzentrischen Koordinaten (Position, Normale, Farbe) und speichert die Informationen in einer HitInfo-Struktur.
 
-```
+RayTriangleIntersect():
+- Basiert auf dem Möller-Trumbore-Algorithmus, um zu bestimmen, ob ein Strahl (Ray) ein Dreieck in 3D-Raum schneidet.
+- Schritt 1. (Ebenen-Schnittpunkt): Schaut, ob der Strahl die Ebene des Dreiecks schneidet. Wenn nicht, wird sofort abgebrochen (Early Exit).
+- Schritt 2. (Baryzentrischer Test): Wenn die Ebene getroffen wird, wird überprüft, ob der Schnittpunkt innerhalb des Dreiecks liegt. Wenn nicht, wird ebenfalls abgebrochen (Early Exit).
+- Berechnet Distanz `t` entlang des Strahls zum Schnittpunkt, sowie die baryzentrischen Koordinaten `u` und `v`, die für die Interpolation von Oberflächeneigenschaften (Normalen, Farben) verwendet werden.
+- Returnt `true`, wenn ein Schnittpunkt gefunden wurde, und `false`, wenn nicht.
+#figure(
+  image("earlyout.jpeg", height: 30%),
+  caption: [Visualisierung der Kanten des Dreiecks und den Early-Exit-Bedingungen],
+)
+
+*Vertex-Shader*:
+- Gibt die Vertex-Positionen und UV-Koordinaten an den Fragment-Shader weiter.
+
+*Fragment-Shader*:
+- Zieht aus der Lightmap den Durchschnitt der Radiance-Werte für das aktuelle Fragment und verrechnet diese mit der Oberflächenfarbe, um die indirekte Beleuchtung zu berechnen.
 
 === Ergebnis
 #figure(
-  image("50_reflection.png", height: 40%),
-  caption: [50% Reflektionsanteil: Die reflektierte Umgebung ist deutlich sichtbar, gleichzeitig bleiben Material- und Lichteigenschaften noch klar erkennbar.],
+  grid(
+    columns: 2,
+    column-gutter: 1em,
+    row-gutter: 0.5em,
+    image("./i40_b1.png"), image("./i40_b50.png"),
+    align(
+      center,
+    )[(a) 40. Iterations, 1. Bounce],
+    align(center)[(b) 40. Iterations, 50. Bounces],
+  ),
+  caption: [Vergleich zwischen einem und mehreren Bounces: Mit zunehmender Anzahl an Bounces wird die indirekte Beleuchtung von anderen Oberflächen in der Szene immer deutlicher sichtbar. In (a) ist nur die direkte Beleuchtung und die erste Reflexion sichtbar, während in (b) die indirekte Beleuchtung von mehreren Bounces deutlich zu erkennen ist.],
+)
+
+#figure(
+  grid(
+    columns: 2,
+    column-gutter: 1em,
+    row-gutter: 0.5em,
+    image("./i500_b1.png"), image("./i500_b50.png"),
+    align(
+      center,
+    )[(a) 500. Iterations, 1. Bounce],
+    align(center)[(b) 500. Iterations, 50. Bounces],
+  ),
+  caption: [Vergleich zwischen sehr feiner Beleuchtung ohne Spekularenanteil (ohne Bounces) und mit Spekularenanteil (mit Bounces): In (a) ist nur die direkte Beleuchtung und die erste Reflexion sichtbar, während in (b) die indirekte Beleuchtung von mehreren Bounces an den Objekten und dem Boden deutlich zu erkennen ist.],
+)
+
+#figure(
+  grid(
+    columns: 2,
+    column-gutter: 1em,
+    row-gutter: 0.5em,
+    image("./i5000_b30.png"), image("./ausschnitt_i5000_b30.png"),
+    align(
+      center,
+    )[(a) 5000. Iterations, 30. Bounces],
+    align(center)[(b) Ausschnitt aus 5000. Iterations, 30. Bounces],
+  ),
+  caption: [Ergebnis einer sehr aufwendigen Berechnung einer Lightmap mit 5000 Iterationen und 30 Bounces.],
 )
 
 #line(length: 100%)
 
-== 9.1) 
-
-
-=== Implementierung
-
-=== Ergebnis
-#figure(
-  image("bump.png", height: 40%),
-  caption: [Visualisierung der Normalmap auf der unitplane. Die aus der Normalmap ausgelesenen Normalen verändern die Beleuchtungsberechnung, wodurch die eigentlich flache Oberfläche Unebenheiten aufweist.],
-)
-
-
-#line(length: 100%)
-
-== 9.x) Zusatzfragen
+== 9.1) Zusatzfragen
 In diesem Kapitel sind Fragen zusammengefasst, die sich während der Implementierung ergeben haben (Nützlich für Prüfungsvorbereitung).
 
 === Frage 1.:
 Was sind Radiance-Werte?
 
 -> *Lösung*:
-- Intensität des Lichts pro Patch. Schätzwert, wie viel indirektes (durch Bounces gesammeltes) Licht dieses Flächenstück abbekommt und selbst wieder reflektiert)
-- Entsteht durch Mone-Carlo-Samples
+- Intensität des Lichts pro Patch. Schätzwert, wie viel indirektes (durch Bounces gesammeltes) Licht dieses Flächenstück abbekommt und selbst wieder reflektiert
+- Entsteht durch Monte-Carlo-Samples
 - Wird in die LightMap geschrieben
 - Im Rendern wird der Wert aus der LightMap gelesen und mit der Oberflächenfarbe der Geometrien/ Objekte verrechnet
   - Sichtbar an dem "Color Bleeding" Effekt, der entsteht, wenn die Farbe der Oberfläche in die indirekte Beleuchtung einfließt.
@@ -74,7 +119,7 @@ Wie wird die LightMap berechnet?
 
 -> *Lösung*:
 - Sie wird nicht aus der Perspektive der Kamera erstellt!
-- Stattdessen wird die Berechnung aus der Perspektive jedes einzelnen Patches selbst durchgeführt: Jedes Patch sitzt an einer festen Position auf der Oberfläche, schaut mit seiner eigenen Normalen in seine eigene Hemisphere hinaus und fragt "wie viel Licht kommt bei mir an?"
+- Stattdessen wird die Berechnung aus der Perspektive jedes einzelnen Patches selbst durchgeführt: Jedes Patch sitzt an einer festen Position auf der Oberfläche, schaut mit seiner eigenen Normalen in seine eigene Hemisphäre hinaus und fragt "wie viel Licht kommt bei mir an?"
   - Unabhängig davon, wo später die Kamera in der Szene steht
 
 === Frage 4.:
@@ -88,24 +133,12 @@ Was ist die Monte-Carlo-Idee?
 
 -> *Lösung*:
 - Man nähert ein schwer zu berechnendes Integral durch viele zufällige Samples an.
-- Bei Raytracing wird dies genutzt, weil man nicht alle Richtungen der Hemisphere einer Oberfläche abtasten kann. Stattdessen werden zufällige Richtungen gewählt, und die Ergebnisse dieser Samples werden gemittelt, um eine Schätzung des Gesamtergebnisses zu erhalten.
+- Bei Raytracing wird dies genutzt, weil man nicht alle Richtungen der Hemisphäre einer Oberfläche abtasten kann. Stattdessen werden zufällige Richtungen gewählt, und die Ergebnisse dieser Samples werden gemittelt, um eine Schätzung des Gesamtergebnisses zu erhalten.
 
-=== Frage 6.:
-
--> *Lösung*:
-
-=== Frage 7.:
-
--> *Lösung*:
-
-=== Frage 8.:
-
--> *Lösung*:
-
-== 9.x) Dokumentation
+== 9.2) Allgemeine Themen
 === Ray-Tracing
 - Von jeder Oberfläche (Patch) werden Strahlen (Rays) in zufällige Richtungen innerhalb der Hemisphäre um die Oberflächennormale ausgesendet. Diese Strahlen treffen auf andere Oberflächen und sammeln deren Radiance-Werte, die dann zur Berechnung der indirekten Beleuchtung verwendet werden.
-- Wir müssten pro Strahl die gesamte Szene abtasten, um zu sehen, auf welche Oberflächen er trifft. Dies ist jedoch sehr rechenintensiv. Eine Möglichkeit den Rechenaufwand zu verringern, ist mithilfe einer Bounding Volume Hierarchy (BVH) die Anzahl der zu prüfenden Oberflächen zu reduzieren. Die BVH ist eine Baumstruktur, die die Szene in hierarchische Volumina unterteilt, sodass Strahlen schnell entscheiden können, welche Oberflächen sie überhaupt treffen könnten.
+- Wir müssten pro Strahl die gesamte Szene abtasten, um zu sehen, auf welche Oberflächen er trifft. Dies ist jedoch sehr rechenintensiv. Eine Möglichkeit, den Rechenaufwand zu verringern, ist, mithilfe einer Bounding Volume Hierarchy (BVH) die Anzahl der zu prüfenden Oberflächen zu reduzieren. Die BVH ist eine Baumstruktur, die die Szene in hierarchische Volumina unterteilt, sodass Strahlen schnell entscheiden können, welche Oberflächen sie überhaupt treffen könnten.
 
 === Ray-Triangle-Intersection
 - Verwendet den Möller-Trumbore-Algorithmus, um zu bestimmen, ob ein Strahl (Ray) ein Dreieck in 3D-Raum schneidet. Dabei werden baryzentrische Koordinaten verwendet, um die Position des Schnittpunkts innerhalb des Dreiecks zu berechnen.

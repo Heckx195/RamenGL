@@ -15,7 +15,7 @@ cmake --build build/
 Erstellen Sie sich die Vertexdaten für einen Würfel. Achten Sie aber darauf, dass sich der Ursprung des Würfels in dessen Schwerpunktmittelpunkt befindet und die Frontfaces des Würfels nach innen zeigen. Schreiben Sie einen Vertex- und Fragmentshader, der Ihnen den Würfel zeichnet.
 
 === Implementierung
-Wiederverwendung des Würfels aus Aufgabe 03 mit der Änderung, dass die Frontfaces nach innen zeigen. Dafür wurde die Vertex-Wending-Order angepasst, sodass die Vertices im Uhrzeigersinn von außen nach innen definiert werden. Ebenso wurden die Normalenvektoren angepasst, damit sie nach innen zum Ursprung zeigen.
+Wiederverwendung des Würfels aus Aufgabe 03 mit der Änderung, dass die Frontfaces nach innen zeigen. Dafür wurde die Vertex-Winding-Order angepasst, sodass die Vertices im Uhrzeigersinn von außen nach innen definiert werden. Ebenso wurden die Normalenvektoren angepasst, damit sie nach innen zum Ursprung zeigen.
 
 #line(length: 100%)
 
@@ -23,7 +23,7 @@ Wiederverwendung des Würfels aus Aufgabe 03 mit der Änderung, dass die Frontfa
 Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`). Diesmal handelt es sich aber um den Typ: `GL_TEXTURE_CUBE_MAP`. Diese Texturart erlaubt es Ihnen im Shader mit einem 3D-Richtungsvektor von den sechs Seiten der Cubemap zu samplen. Den Texturspeicher legen Sie mit `glTextureStorage2D` an. Nun können Sie die sechs geladenen Bilder mithilfe der Funktion `glTextureSubImage3D` in den angelegten Speicher der Grafikkarte laden. Nehmen Sie in Ihre Dokumentation mit auf für was die Parameter von `glTextureSubImage3D` stehen und wie Sie vorgegangen sind. 
 
 === Implementierung
-- Zuerst wird mit `glCreateTextures` eine neue Textur vom Typ `GL_TEXTURE_CUBEMAP` mit einer zuvor erstellten TexturID erstellt.
+- Zuerst wird mit `glCreateTextures` eine neue Textur vom Typ `GL_TEXTURE_CUBE_MAP` mit einer zuvor erstellten TexturID erstellt.
 
 - In einer For-Schleife werden die sechs Bilder für die sechs Seiten der Cubemap geladen
 
@@ -43,7 +43,7 @@ Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`). Diesmal handelt e
 Spielt die Reihenfolge, mit der Sie die einzelnen Bilder hochladen, eine Rolle?
 
 === Lösung
-- Die Reihenfolge beim Hochladen der sechs Bilder spielt in dem Sinne nur eine Rolle, dass sie zum richtigen Enum zugeordnert werden müssen
+- Die Reihenfolge beim Hochladen der sechs Bilder spielt in dem Sinne nur eine Rolle, dass sie zum richtigen Enum zugeordnet werden müssen
  - i=0 -> GL_TEXTURE_CUBE_MAP_POSITIVE_X
  - i=1 -> GL_TEXTURE_CUBE_MAP_NEGATIVE_X
  - i=2 -> GL_TEXTURE_CUBE_MAP_POSITIVE_Y
