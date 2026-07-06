@@ -570,8 +570,8 @@ int main(int argc, char** argv)
                 }
             }
         }
-        if ( pRamen->KeyPressed(SDLK_UP) ) camera.RotateAroundSide(-100.0f * msPerFrame / 1000.0f);
-        if ( pRamen->KeyPressed(SDLK_DOWN) ) camera.RotateAroundSide(100.0f * msPerFrame / 1000.0f);
+        if ( pRamen->KeyPressed(SDLK_DOWN) ) camera.RotateAroundSide(-100.0f * msPerFrame / 1000.0f);
+        if ( pRamen->KeyPressed(SDLK_UP) ) camera.RotateAroundSide(100.0f * msPerFrame / 1000.0f);
         if ( pRamen->KeyPressed(SDLK_LEFT) ) camera.RotateAroundWorldUp(100.0f * msPerFrame / 1000.0f);
         if ( pRamen->KeyPressed(SDLK_RIGHT) ) camera.RotateAroundWorldUp(-100.0f * msPerFrame / 1000.0f);
         if ( pRamen->KeyPressed(SDLK_W) ) camera.DollyForward(DOLLY_SPEED * (float)msPerFrame / 1000.0f);
@@ -605,6 +605,7 @@ int main(int argc, char** argv)
                 recomputeLightmap   = true;
                 iterationCounter    = 0;
                 patches_ssbo_toggle = 0;
+                frameNum            = 0;
             }
             ImGui::Text("xAtlas UV Map");
             ImTextureID imguiXatlasTexture = (ImTextureID)(intptr_t)xatlasUV_Texture;

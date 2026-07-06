@@ -44,19 +44,20 @@ struct HitInfo
 };
 
 layout(std430, binding = 0) readonly buffer PatchesSSBO_Read {
-    Patch patches_read[];
+    Patch patches_read[]; // Hier sind die Daten der Patches, wie
+        // Position, Normal, Radiance, DebugColor und Area
 };
 
 layout(std430, binding = 1) writeonly buffer PatchesSSBO_Write {
-    Patch patches_write[];
+    Patch patches_write[]; // Hier werden die Ergebnisse der Berechnungen für die Patches
 };
 
 layout(std430, binding = 2) readonly buffer TriangleSSBO_IN {
-    Triangle trianglesIN[];
+    Triangle trianglesIN[]; // Hier sind die Indizes der Dreiecke
 };
 
 layout(std430, binding = 3) readonly buffer VerticesSSBO_IN {
-    ComputeShaderVertex verticesIN[];
+    ComputeShaderVertex verticesIN[]; // Hier sind die VBA-Daten der Dreiecke
 };
 
 layout(binding = 0, rgba32f) writeonly uniform image2D u_LightmapTexture;
@@ -99,7 +100,7 @@ vec3 RandomUnitVector(inout uint state)
 
 layout(local_size_x = 4, local_size_y = 4, local_size_z = 1) in;
 
-// Moeller-Trumbore Ray-Triangle-Intersection.
+// Möller-Trumbore Ray-Triangle-Intersection.
 // Schritt 1 (Ebenen-Schnittpunkt) und Schritt 2 (Baryzentrischer Test) sind verschachtelt (Early Exit)
 bool RayTriangleIntersect(vec3 rayOrigin, vec3 rayDir, vec3 v0, vec3 v1, vec3 v2, out float t, out float u, out float v)
 {
@@ -138,11 +139,113 @@ bool RayTriangleIntersect(vec3 rayOrigin, vec3 rayDir, vec3 v0, vec3 v1, vec3 v2
     return t > 1e-6; // Intersection occurs in front of the ray origin
 }
 
-// Bereit für den nächsten Schritt – die Funktion, die über alle Dreiecke iteriert und den nächstgelegenen Treffer sucht?
- 
+HitInfo FindClosestHit(vec3 rayOrigin, vec3 rayDir, vec3 patchNormal)
+{
+    HitInfo closest;
+    closest.hit = false; // solange kein Dreieck getroffen wurde, bleibt das so
+    float currentT = 1e30; // Start with a too large value for the scene
+
+    for (int i = 0; i < int(u_NumTris); ++i)
+    {
+        // Dreieck i holen, Indizes holen, Vertex-Positionen holen
+        Triangle tri = trianglesIN[i];
+        vec3 v0 = verticesIN[tri.indices.x].position.xyz;
+        vec3 v1 = verticesIN[tri.indices.y].position.xyz;
+        vec3 v2 = verticesIN[tri.indices.z].position.xyz;
+
+        float t, u, v;
+        // if ray intersects closest triangle
+        if (RayTriangleIntersect(rayOrigin + patchNormal*0.001, rayDir, v0, v1, v2, t, u, v))
+        {
+            if (t < currentT)
+            {
+                currentT = t;
+                
+                // Normale und Farbe des getroffenen Dreiecks
+                vec3 n0 = verticesIN[tri.indices.x].normal.xyz;
+                vec3 n1 = verticesIN[tri.indices.y].normal.xyz;
+                vec3 n2 = verticesIN[tri.indices.z].normal.xyz;
+                vec3 c0 = verticesIN[tri.indices.x].color.xyz;
+                vec3 c1 = verticesIN[tri.indices.y].color.xyz;
+                vec3 c2 = verticesIN[tri.indices.z].color.xyz;
+
+                // u, v = erste und zweite baryzentrische Koordinaten
+                float w0 = 1.0 - u - v; // dritte baryzentrische Koordinate
+
+                // HitInfo aktualisieren
+                    // alpha = w0 gehört zu v0
+                    // beta = u gehört zu v1
+                    // gamma = v gehört zu v2
+                closest.hit = true;
+                closest.dist = t;
+
+                // Interpolierte Position, Normale und Farbe des getroffenen Punkts
+                    // rayOrigin = Ursprung des Strahls vom Patch
+                    // RayDir = Richtung des Strahls
+                closest.pos = rayOrigin + t * rayDir;
+                    // Interpolier die drei Positionen des Dreiecks
+                closest.normal = normalize(w0 * n0 + u * n1 + v * n2);
+                    // Interpolier die drei Normalen des Dreiecks basierend am Gewicht der baryzentrischen Koordinaten
+                closest.color = w0 * c0 + u * c1 + v * c2;
+                    // Interpolier die drei Farben des Dreiecks basierend am Gewicht der baryzentrischen Koordinaten
+            }
+        }
+    }
+
+    return closest;
+}
+
+// Farbe des "Himmels" -- unsere einzige Lichtquelle. Wird nur dann in die Radiance
+// eingerechnet, wenn ein Ray tatsaechlich entkommt (siehe Schleife unten).
+const vec3 c_SkyColor = vec3(1.0f);
+
+// Iterative Monte-Carlo-Bounce-Schleife (keine Rekursion moeglich in Shadern).
+// Verfolgt einen Ray ueber mehrere Bounces und gibt die daraus resultierende Radiance zurueck.
+vec3 TraceBounces(vec3 startOrigin, vec3 startDir, vec3 startNormal, inout uint rngState)
+{
+    vec3 throughput = vec3(1.0f); // sammelt multiplikativ die Materialfarben aller bisherigen Treffer
+    vec3 currentOrigin = startOrigin;
+    vec3 currentDir = startDir;
+    vec3 currentNormal = startNormal; // fuer den Selbstschnitt-Offset in FindClosestHit
+
+    for (uint bounce = 0u; bounce < u_NumBounces; ++bounce)
+    {
+        HitInfo hit = FindClosestHit(currentOrigin, currentDir, currentNormal);
+
+        if (!hit.hit)
+        {
+            // Ray ist der Levelgeometrie entkommen -> Himmel (Lichtquelle) erreicht.
+            return throughput * c_SkyColor;
+        }
+
+        // Lambert-BRDF-Naeherung: Materialfarbe der getroffenen Flaeche multiplikativ
+        // einrechnen (fuehrt zu "Color Bleeding" bei mehreren Bounces ueber farbige Flaechen).
+        throughput *= hit.color;
+
+        // Naechster Bounce startet am Trefferpunkt, in eine neue zufaellige Richtung
+        // innerhalb der Hemisphaere um die getroffene Normale.
+        currentOrigin = hit.pos;
+        currentNormal = hit.normal;
+        currentDir = RandomUnitVector(rngState);
+        if (dot(currentDir, currentNormal) < 0.0f)
+        {
+            currentDir = -currentDir;
+        }
+
+        // Lambertsches Kosinusgesetz: Da wir uniform (nicht kosinus-gewichtet) ueber die
+        // Hemisphaere samplen, muss der Kosinus-Term explizit in den Monte-Carlo-Schaetzer
+        // eingerechnet werden -- sonst tragen streifende Winkel faelschlich zu viel bei.
+        float cosTheta = max(dot(currentDir, currentNormal), 0.0f);
+        throughput *= cosTheta;
+    }
+
+    // u_NumBounces aufgebraucht, ohne dass der Himmel je erreicht wurde ->
+    // keine Lichtquelle war beteiligt -> dieses Sample traegt nichts bei.
+    return vec3(0.0f);
+}
+
 void main()
 {
-
     /* initialize a random number state based on compute-unit ( = lightmap texture coord) and frame */
     uint rngState = uint(uint(gl_GlobalInvocationID.x) * uint(1973) + uint(gl_GlobalInvocationID.y) * uint(9277) + uint(u_FrameNum) * uint(26699)) | uint(1);
 
@@ -159,6 +262,19 @@ void main()
     /* Get patch for current workitem. */
     Patch p = patches_read[patch_index];
 
+    /* Dieses Texel gehört zu keinem echten Patch (Lücke/Padding im UV-Atlas).
+     * Echte Patches haben immer eine normalisierte Normale (Länge ~1); nie beschriebene
+     * Patches bleiben beim memset() auf vec3(0) stehen (Länge 0). area.x eignet sich NICHT
+     * dafür, da sie bei sehr kleinen UV-Dreiecken durch Int-Truncation auch bei gültigen
+     * Patches 0 werden kann. */
+    if (dot(p.normal.xyz, p.normal.xyz) < 0.01f)
+    {
+        p.radiance = vec4(0.0f, 0.0f, 0.0f, 1.0f); // Kein Sample -> Schwarz
+        patches_write[patch_index] = p;
+        imageStore(u_LightmapTexture, ivec2(gl_GlobalInvocationID.xy), p.radiance);
+        return;
+    }
+
     /* Generate a random unit vector on this patch to use as ray */
     vec3 rand_dir = RandomUnitVector(rngState);
     // Make sure ray faces away from patch's front-face.
@@ -166,8 +282,18 @@ void main()
         rand_dir = -rand_dir;
     }
 
-    /* Update radiance for patch. For now, just visualize random unit vector. */
-    p.radiance = vec4(0.5f * rand_dir + 0.5f, 1.0f);
+    // Gewichtet mit Lambert das erste Sample, das das Patch verlässt, mit dem Kosinus des Winkels zwischen 
+    float initialCosTheta = max(dot(rand_dir, p.normal.xyz), 0.0f);
+
+    /* Ein Sample: Ray ueber bis zu u_NumBounces Bounces verfolgen und die resultierende Radiance holen. */
+    vec3 sampleRadiance = initialCosTheta * TraceBounces(p.worldpos.xyz, rand_dir, p.normal.xyz, rngState);
+
+    /* Laufenden Mittelwert ueber alle bisherigen Samples bilden (ein Dispatch = ein neues Sample).
+     * u_FrameNum ist 0-basiert und zaehlt hoch, seit zuletzt zurueckgesetzt wurde. */
+    float sampleCount = float(u_FrameNum) + 1.0f;
+    vec3 previousRadiance = p.radiance.rgb;
+    vec3 newRadiance = previousRadiance + (sampleRadiance - previousRadiance) / sampleCount; // Auf bestehenden Mittelwert aufaddieren
+    p.radiance = vec4(newRadiance, 1.0f);
     patches_write[patch_index] = p;
 
     /* Also write result into lightmap texture */

@@ -29,7 +29,6 @@ void main()
     vec3 N = normalize(in_WorldNormal); // Oberflaechennormale
     if (u_useBumpMapping)
     {
-        // Bump Mapping logik hier
         vec3 N_TangentSpace = normalize(texture(u_NormalMap, in_UV).rgb * 2 - 1.0); // Normal aus der Normalmap holen und in [-1, 1] Bereich umwandeln
             // Sample Normalmap basierend auf UV Koordinaten
             // Umwandlung der XYZ-Koordinaten der gesampelten NormalenTangentSpace in [-1, 1] transformieren

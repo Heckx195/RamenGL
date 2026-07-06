@@ -14,9 +14,14 @@ cmake --build build/
 
 
 === Implementierung
-
-
 - Keine Rekursion im Compute-Shader, da sonst ein Call-Stack benötigt wird, der auf Grafikkarten, wo Millionen von Threads gleichzeitig laufen, nicht praktikabel ist. Stattdessen wird die Rekursion in eine Schleife umgewandelt, die die Strahlen (Rays) solange verfolgt, bis sie auf eine Oberfläche treffen oder die maximale Anzahl an Bounces erreicht ist.
+
+Im Compute-Shader:
+- RayTriangleIntersect():
+  - Schritt 1. (Ebenen-Schnittpunkt): Schaut ob der Strahl die Ebene des Dreiecks schneidet. Wenn nicht, wird sofort abgebrochen (Early Exit).
+  - Schritt 2. (Baryzentrischer Test): Wenn die Ebene getroffen wird, wird überprüft, ob der Schnittpunkt innerhalb des Dreiecks liegt. Wenn nicht, wird ebenfalls abgebrochen (Early Exit).
+- FindClosestHit():
+  - Iteriert über alle Dreiecke der Szene und ruft RayTriangleIntersect() auf, um den nächsten Schnittpunkt zu finden. Interpoliert die Informationen des nächsten Trefferpunkts basierend auf den baryzentrischen Koordinaten (Position, Normale, Farbe) und speichert die Informationen in einer HitInfo-Struktur.
 
 ```c
 
