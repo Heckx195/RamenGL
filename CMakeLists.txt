@@ -10,7 +10,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 
 add_subdirectory(./dependencies/SDL EXCLUDE_FROM_ALL)
 option(PHYSFS_BUILD_TEST "Build physfs test program" OFF)
+# physfs deklariert intern noch `cmake_minimum_required(VERSION 3.0)`,
+# was neuere CMake-Versionen (>=4.0) nicht mehr akzeptieren.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 add_subdirectory(./dependencies/physfs/)
+unset(CMAKE_POLICY_VERSION_MINIMUM)
 set(BUILD_SHARED_LIBS ON)
 add_subdirectory(./dependencies/tinyobjloader/)
 set(BUILD_SHARED_LIBS OFF)

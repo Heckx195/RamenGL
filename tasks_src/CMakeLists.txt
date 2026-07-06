@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30.2)
+cmake_minimum_required(VERSION 3.6)
 project(Examples VERSION 0.0.1)
 
 if (NOT RAMEN_BUILD_PROGRAM_NAME)

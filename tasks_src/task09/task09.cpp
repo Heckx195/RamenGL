@@ -176,10 +176,12 @@ bool IsUV_OnTri(const Vec2f& uv, const Vertex& v0, const Vertex& v1, const Verte
     float w0 = Cross(Vec2f{ v1.uv } - uv, Vec2f{ v2.uv } - uv) * invArea;
     float w1 = Cross(Vec2f{ v2.uv } - uv, Vec2f{ v0.uv } - uv) * invArea;
     float w2 = 1.0f - w0 - w1; //Cross(Vec2f{ v0.uv } - uv, Vec2f{ v1.uv } - uv) * invArea;
+        // positiver Wert = Punkt liegt links von Strecke v0-v1
+        // negativer Wert = Punkt liegt rechts von Strecke v0-v1
 
     const float eps = -1e-6f;
 
-    bool inside = w0 >= eps && w1 >= eps && w2 >= eps;
+    bool inside = w0 >= eps && w1 >= eps && w2 >= eps; // liegt der Punkt uv innerhalb des Dreiecks?
 
     if ( inside )
     {
@@ -204,7 +206,8 @@ struct ComputeShaderVertex
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv);
+    // Filesystem* pFS = Filesystem::Init(argc, argv);
+    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("Computeshader", 800, 600);
