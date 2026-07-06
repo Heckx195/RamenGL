@@ -10,7 +10,7 @@ cmake --build build/
 
 #line(length: 100%)
 
-== 9.0) 
+== 9.0) Globale Beleuchtung mittels Compute-Shader (Lightmap-Baking)
 
 
 === Implementierung

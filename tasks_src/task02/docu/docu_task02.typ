@@ -15,7 +15,7 @@ cmake --build build/
 #line(length: 100%)
 
 = Aufgabe02
-https://docs.gl/
+- https://docs.gl/
 
 == glCreateBuffers(...)
 ```c

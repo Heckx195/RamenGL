@@ -6,7 +6,7 @@ cmake --build build/
 #line(length: 100%)
 
 = Aufgabe04
-https://docs.gl/
+- https://docs.gl/
 
 #line(length: 100%)
 
@@ -14,7 +14,7 @@ https://docs.gl/
 Weisen Sie ihren Quad-Vertices Texturkoordinaten zu, sodass die vier
 Eckpunkte eines quadratischen Bildes den Vertices zugeordnet werden.
 
-=== Lösung
+=== Implementierung
 - Texturkoordinaten so erstellen, dass die UV-Koordinaten von oben links (0,0) nach unten rechts (1,1) verlaufen. Wenn (0,0) oben links ist, dann steht die Textur auf dem Kopf.
 - Der Unterschied kommt daher, da Bildformate (PNG, JPEG) die Pixel von oben links nach unten rechts speichern, während OpenGL die UV-Koordinaten standardmäßig von unten links nach oben rechts interpretiert
  - Man kann die Texturkoordinaten anpassen oder beim Laden des Bildes einen Flip durchführen, um die Textur korrekt darzustellen.
@@ -116,7 +116,7 @@ Lädt Pixeldaten von der CPU in den zuvor reservierten GPU-Speicher. Ermöglicht
 mit dem Vertex-Shader, sodass die Texturkoordinaten in diesem verfügbar werden. Ermöglichen Sie außerdem
 die Weiterleitung der Texturkoordinaten aus dem Vertex- in den Fragment-Shader.
 
-=== Lösung
+=== Implementierung
 ```c
 /* uv */ // uv is at offset 9 * bytes size(float)
 glVertexArrayAttribFormat(VAO_Earth, 3, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float));
@@ -133,7 +133,7 @@ Finden Sie nun den entsprechenden CPU-Seitigen Befehl, der
 die OpenGL-Textur, welche Sie in 4.4 erstellt haben, mit
 dem Shader verbindet.
 
-=== Lösung
+=== Implementierung
 ```c
 glBindTextureUnit(0, textureHandle);
 ```
@@ -143,7 +143,7 @@ glBindTextureUnit(0, textureHandle);
 - Im Fragment-Shader werden über die built-in Funktion _texture(sampler2D, in_UV.st)_ die Texturfarben anhand der Texturkoordinaten aus der Textur (_u_Texture_) abgefragt.
 - Der Sampler2D wurde in der Rendering-Loop mit _glBindTextureUnit(0, textureHandle)_ an Texture Unit 0 gebunden, auf die im Shader über den uniform sampler2D zugegriffen werden kann.
 
-=== Frage 1.):
+=== Frage 1.:
 Je nachdem, wie Sie Ihre Texturkoordinaten erstellt haben, sehen
 Sie das Bild auf dem Kopf. Wenn dem so ist, finden Sie eine Erklärung
 und einen Weg, dies zu ändern. Aber auch, wenn das Bild nicht
@@ -155,7 +155,7 @@ Nehmen Sie die Erkenntnisse in Ihre Dokumentation mit auf.
 
 #line(length: 100%)
 
-== 4.5.) Texturkoordinaten für die Kugel erstellen
+== 4.5) Texturkoordinaten für die Kugel erstellen
 Nutzen Sie die Kugel, die Sie in task03 erstellt haben und
 weisen Sie dieser so Texturkoordinaten zu, sodass sich eine
 Weltkarte auf diese 'mappen' lässt. Rendern Sie die Kugel.
@@ -166,12 +166,12 @@ Weltkarte auf diese 'mappen' lässt. Rendern Sie die Kugel.
 
 #line(length: 100%)
 
-== 4.6.) Rotation der Kugel
+== 4.6) Rotation der Kugel
 Ermöglichen Sie die Rotation der Kugel mithilfe
 der Pfeiltasten, sodass Sie die Kugel von allen
 Blickwinkeln betrachten können.
 
--> *Lösung*:
+=== Implementierung
 ```c
 // Reihenfolge für Rotation wichtig! Erst Welt-Y-Achse dann Welt-X-Achse
 Mat4f earthModelMat = modelMat

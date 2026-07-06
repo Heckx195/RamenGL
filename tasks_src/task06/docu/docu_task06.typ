@@ -15,8 +15,6 @@ cmake --build build/
 == 6.1) Rendern in eine Textur
 Wie erstellt man einen weiteren Framebuffer mit depth-attachment, um die Tiefeninformationen der Szene aus der Sicht der Lichtquelle zu speichern? (Shadowmap)
 
-#line(length: 100%)
-
 === Implementierung
 - Zuerst wird neben dem Default Framebuffer ein neuer Framebuffer erstellt, der als Shadowmap-Framebuffer dient.
 - An diesen Framebuffer wird eine Textur als Depth Attachment gebunden, um die Tiefeninformationen zu speichern.
@@ -40,8 +38,8 @@ Wie erstellt man einen weiteren Framebuffer mit depth-attachment, um die Tiefeni
 === Erstellen der Shadowmap (erster Durchlauf)
 - Für den ersten Durchlauf muss das Framebuffer-Objekt (Shadowmap-Framebuffer) gebunden und die Viewportgröße auf die Größe der Shadowmap gesetzt werden, damit die Tiefenwerte korrekt in die Shadowmap geschrieben werden.
 - Für das korrekte Rendern der Szene aus der Sicht der Lichtquelle und dem Schreiben der Tiefenwerte in die Shadowmap braucht es einen eigenen Shader (shadowMapShader).
- - Vertex-Shader: Die Objektkoordinaten werden mit der LightCamera (LightViewMatrix und LightProjectionMatrix) transformiert, um die Szene aus der Sicht der Lichtquelle zu rendern und in gl_Position zu schreiben. OpenGL berechnet automatisch gl_Position.z / gl_Position.w, um die Tiefenwerte zu erhalten, die in der Shadowmap gespeichert werden.
- - Fragment-Shader: Es wird kein Fragment-Shader benötigt
+ - *Vertex-Shader*: Die Objektkoordinaten werden mit der LightCamera (LightViewMatrix und LightProjectionMatrix) transformiert, um die Szene aus der Sicht der Lichtquelle zu rendern und in gl_Position zu schreiben. OpenGL berechnet automatisch gl_Position.z / gl_Position.w, um die Tiefenwerte zu erhalten, die in der Shadowmap gespeichert werden.
+ - *Fragment-Shader*: Es wird kein Fragment-Shader benötigt
 - Im ersten Durchlauf werden alle Hauptmodelle der Szene, die einen Schatten werfen sollen, mit dem shadowMapShader gerendert (Skull-Modell und Kugel).
 
 #line(length: 100%)
@@ -59,8 +57,8 @@ Nutzen Sie eine weitere Kamera, um die Position und Orientierung der Lichtquelle
 
 == 6.4) Samplen der Shadowmap
 - Im zweiten Durchlauf (Hauptpass) wird die Shadowmap als Textur gebunden und im Fragment-Shader gesampelt, um zu bestimmen, ob ein Fragment im Schatten liegt oder nicht.
- - Vertex-Shader: Neben den Clipspace-Koordinaten (gl_Position) müssen auch die Koordinaten in Licht-Sicht (`lightProj * lightView * modelMat * in_Position`) berechnet werden und an den Fragment-Shader weitergegeben.
- - Fragment-Shader: Die Licht-Sicht-Koordinaten werden zuerst durch `in_LightSpacePos.w` geteilt, um diese in Normalized Device Coordinates (NDC) zu transformieren. Mit dem Bias `*0.5 + 0.5` werden die NDC-Koordinaten in den Texturkoordinatenbereich [0, 1] transformiert.
+ - *Vertex-Shader*: Neben den Clipspace-Koordinaten (gl_Position) müssen auch die Koordinaten in Licht-Sicht (`lightProj * lightView * modelMat * in_Position`) berechnet werden und an den Fragment-Shader weitergegeben.
+ - *Fragment-Shader*: Die Licht-Sicht-Koordinaten werden zuerst durch `in_LightSpacePos.w` geteilt, um diese in Normalized Device Coordinates (NDC) zu transformieren. Mit dem Bias `*0.5 + 0.5` werden die NDC-Koordinaten in den Texturkoordinatenbereich [0, 1] transformiert.
   - Liegt die Fragmentposition außerhalb der Lichtkegel (z.B. `projCoords.z > 1.0`), wird kein Schatten berechnet, da diese Positionen nicht in der Shadowmap erfasst werden.
   - Wenn die Koordinaten im Lichtkegel liegen, werden die berechneten Texturkoordinaten verwendet, um die Shadowmap zu sampeln und den Tiefenwert der Shadowmap an dieser Stelle zu erhalten: `sampleShadowMap = texture(u_ShadowMap, projCoords.xy)`, dann `closetDepth = sampleShadowMap.r`. Standardmäßig werden die Tiefenwerte im Rot-Kanal der DepthTexture der Shadowmap gespeichert. Dieser Tiefenwert wird mit dem aktuellen Tiefenwert des Fragments `currentDepth = projCoords.z` verglichen, um zu bestimmen, ob das Fragment im Schatten liegt oder nicht: `shadow = (currentDepth - u_BiasAmount) > closetDepth ? 1.0 : 0.0;`.
   - Am Ende wird die Texturfarbe mit dem Schattenfaktor multipliziert, um die endgültige Farbe des Fragments zu berechnen: `outColor = texColor * (1 - shadow)`.

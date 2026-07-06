@@ -9,7 +9,7 @@ cmake --build build/
 
 #line(length: 100%)
 
-== 3.1) Nutzen der Farbattribute.
+== 3.1) Nutzen der Farbattribute
 Dafür muss zuerst bei der Erstellung der Vertexes die Farbe als Attribut hinzugefügt werden. Im Vertex-Shader muss dann das Farbattribut als Input und Output deklariert werden und an den Fragment-Shader weitergegeben werden. Im Fragment-Shader muss dann die Farbe als Input deklariert und mit _outColor_ verbunden werden.
 
 #line(length: 100%)
@@ -69,7 +69,7 @@ Wie testen Sie, ob Ihre Normalenvektoren korrekt sind und auch korrekt
 im Shader sind? Nutzen Sie mindestens zwei Möglichkeiten.
 Dokumentieren Sie Ihr Vorgehen.
 
-=== Lösung
+-> *Lösung*:
 1. Möglichkeit: Visualisierung der Normalenvektoren
   - Normalenvektoren als Linien in der Szene visualisieren. Dazu wird für jeden Vertex eine Linie gezeichnet zwischen seinem Position und einem Punkt auf seiner Normalen. Die Farbe wird basierend auf seiner Ausrichtung berechnet. Wenn die Normalen korrekt sind, sollten sie in der Szene sichtbar sein und die Farben sollten entsprechend der Ausrichtung variieren.
   - Farbkennzeichnung:
@@ -102,7 +102,7 @@ der Normalenvektoren etwas zu beachten? Falls ja,
 erläutern Sie was das Problem ist und leiten Sie
 eine geeignete mathematische Lösung her.
 
-=== Lösung
+-> *Lösung*:
 - Das Lambert cosine law besagt, dass die Intensität des von einer Oberfläche reflektierten Lichts proportional zum Kosinus des Winkels zwischen der Normalen der Oberfläche und der Richtung des einfallenden Lichts ist. Je größer der Winkel zwischen Normalen und Lichtquelle, desto schwächer die Beleuchtung.
 - Bei der Transformation von Modellen bei nicht-uniformen Skalierungen können die Normalenvektoren nicht einfach mit der Modellmatrix transformiert werden, da dies zu verzerrten Normalen führt. Das Problem ist, dass die Normalenvektoren orthogonal zur Oberfläche bleiben müssen, aber eine nicht-uniforme Skalierung kann diese Orthogonalität zerstören. Hat ein Tangentenvektor t eine positive x-Komponente, wird eine x-Streckung t nach rechts drehen (z. B. um -18°). Der Normalenvektor n mit negativer x-Komponente wird durch dieselbe x-Streckung nach links gedreht (z. B. um +18°). Das Ergebnis ist, dass n nicht mehr orthogonal zu t ist, was zu falschen Beleuchtungsergebnissen führt.
 - Deshalb muss die Transformation der Normalenvektoren mit der Inversen Transponierten der Modellmatrix erfolgen, um sicherzustellen, dass die Normalen korrekt transformiert werden und ihre Orthogonalität zur Oberfläche beibehalten wird.
@@ -113,11 +113,11 @@ eine geeignete mathematische Lösung her.
   - lightColor ist die Farbe des Lichts
 
 === Implementierung
-==== Vertex-Shader
+*Vertex-Shader*:
 - Der Normalenvektor mit der Transponierten Inverse der Modellmatrix (_normalMatrix_) transformiert, um sicherzustellen, dass die Normalen korrekt transformiert werden.
 - Zusätzlich werden noch die Weltkoordinaten der Vertex-Position berechnet und an den Fragment-Shader weitergegeben, um die Berechnung der Beleuchtung im Fragment-Shader zu ermöglichen.
 
-==== Fragment-Shader
+*Fragment-Shader*:
 - _N_ aus den interpolierten Normalenvektoren berechnet und normalisiert, da der Rasterizer die Normalenvektoren interpoliert und dadurch nicht mehr normalisiert sein können.
 - _L_ wird als Vektor von der Fragment-Position zur Lichtquelle berechnet und ebenfalls normalisiert.
 - Der diffuse Beleuchtungsanteil wird aus dem Skalarprodukt von _N_ und _L_ berechnet, mit ambient addiert (damit es nicht komplett schwarz ist) und mit der Objektfarbe multipliziert.
@@ -133,7 +133,7 @@ die Funktionalität von SDL3.
 Dokumentieren Sie welches Winkelvorzeichen die Kamera in welche Richtung
 rotiert bzw. verschiebt. Erklären Sie warum die Kamera sich so verhält. 
 
-=== Lösung
+-> *Lösung*:
 -> Rechte-Hand-Regel (x Daumen zeigt in positive Richtung, y Zeigefinger zeigt in positive Richtung, z Mittelfinger zeigt in positive Richtung)
 - Pitch Up: positive Roation um die X-Achse
 - Pitch Down: negative Rotation um die X-Achse
@@ -151,7 +151,7 @@ rotiert bzw. verschiebt. Erklären Sie warum die Kamera sich so verhält.
 == 3.7) Matrizen-Stack
 Bauen Sie eine animierte Szene mithilfe eines Matrizenstapels und den von Ihnen erstellten primitiven Körpern. Implementieren Sie hierzu am besten eine Klasse, welche die Methoden aus der Vorlesung zur Verfügung stellt.
 
-=== Lösung
+-> *Lösung*:
 - Es wurde eine Klasse _matrixStack.h_ erstellt, die einen Stack (_vector_) von Matrizen verwaltet. Die Klasse besitzt Methoden zum Pushen und Popen von Matrizen sowie zum Multiplizieren der aktuellen Matrix mit einer neuen Transformation/ Rotation oder Skalierung.
 
 === Implementierung

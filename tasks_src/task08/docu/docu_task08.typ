@@ -21,7 +21,7 @@ sodass Sie zwischen den beiden Methoden umschalten können.
 - In der Render-Loop wird ein neues UI-Element erstellt, worin die vier vec3 verändert werden können, sowie der Shininess-Faktor und ein Toggle für Phong- vs. Gouraud-Shading.
 - Die Werte werden über Uniforms an die beiden Shader gegeben, wobei die Material- und Lichteigenschaften miteinander multipliziert werden, um Multiplikationen pro Vertex oder Fragment in den Shadern zu vermeiden.
 
-Vertex-Shader:
+*Vertex-Shader*:
 - In den Uniforms werden die vier Material- und Lichteigenschaften sowie der Shininess-Faktor übergeben
 - Für Gouraud-Shading wird im Vertex-Shader die Beleuchtungsberechnung durchgeführt und das Ergebnis als out_color an den Fragment-Shader weitergegeben, welches durch den Rasterizer interpoliert wird
 
@@ -48,7 +48,7 @@ out_color = emissive + ambient + diffus * u_materialLightDiffuse + spekular * u_
     // u_materialLightDiffuse = sorgt dafür, dass ein rotes Material auch nur rotes Licht reflektiert
 ```
 
-Fragment-Shader:
+*Fragment-Shader*:
 - Für Gouraud-Shading wird die berechnete und interpolierte Farbe über die GLSL-Funktion mix() mit der Farbe des reflektierten Cubemap-Lichts gemischt, um die finale Fragmentfarbe zu berechnen
 - Für Phong-Shading wird die Beleuchtungsberechnung im Fragment-Shader durchgeführt, wobei die interpolierten Normalenvektoren verwendet werden. Das Ergebnis wird dann mit der Farbe des reflektierten Cubemap-Lichts gemischt, um die finale Fragmentfarbe zu berechnen. Der gezeigte Code-Block ist identisch mit dem im Vertex-Shader, nur dass die interpolierten Normalenvektoren verwendet werden.
   - Der Vor- und Nachteil von Phong-Shading ist, dass es eine detailliertere Beleuchtung ermöglicht, aber auch mehr Rechenleistung benötigt, da die Beleuchtungsberechnung pro Fragment durchgeführt wird.
@@ -87,7 +87,7 @@ Fragment-Shader:
   caption: [50% Reflektionsanteil: Die reflektierte Umgebung ist deutlich sichtbar, gleichzeitig bleiben Material- und Lichteigenschaften noch klar erkennbar.],
 )
 
-=== Fragen 1.)
+=== Frage 1.:
 Erläutern Sie, wie sich die Berechnung pro Fragment
 im Gegensatz zur Lichtberechnung pro Vertex unterscheidet und wie
 sich die beiden Verfahren nennen.
@@ -95,7 +95,7 @@ Welche visuellen Unterschiede gibt es und wann sind diese besonders
 auffällig? Was ist gerade bei der Berechnung pro Fragment
 im Fragmentshader zu beachten?
 
-=== Lösung
+-> *Lösung*:
 Berechnung pro Vertex:
 - Gouraud Shading
 - Es müssen weniger Berechnungen durchgeführt werden, weil das Ergebnis der Lichtberechnung durch den Rasterizer auf die Fragmente interpoliert wird
@@ -128,10 +128,10 @@ glTextureParameteri(textureHandleNormalMap, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 - In der Render-Loop wird ein neues UI-Element erstellt, um Bumpmapping zu aktivieren oder zu deaktivieren. Der Wert wird über eine Uniform an den Fragment-Shader übergeben, um die Normalmap nur dann zu verwenden, wenn Bumpmapping aktiviert ist.
   - UV-Koordinaten, Tangent- und Bitangentvektoren hängen als Vertex-Attribute am VAO und werden bei jedem Draw-Call automatisch an die Shader übergeben, vorausgesetzt die Location-Nummern stimmen zwischen VAO und Shader exakt überein
 
-Vertex-Shader:
+*Vertex-Shader*:
 - Es werden zusätzlich die UV-Koordinaten, Tangent- und Bitangentvektoren als Attribute an den Vertex-Shader übergeben. Die UV-Koordinaten werden unverändert an den Fragment-Shader weitergegeben, während die Tangent- und Bitangentvektoren davor in Weltkoordinaten transformiert werden.
 
-Fragment-Shader:
+*Fragment-Shader*:
 - Mit den UV-Koordinaten wird die Normalmap-Textur ausgelesen und der daraus resultierende Normalenvektor im Tangentspace wird in den Bereich [-1, 1] transformiert. Anschließend wird aus dem Tangent-, Bitangent- und Normalenvektor des Fragments (alle in Weltkoordinaten) die TBN-Matrix (Tangent, Bitangent, Normal) erstellt und mit dem Normalenvektor im Tangentspace multipliziert, um die Weltraum-Normale zu erhalten. Die neue Weltraum-Normale muss normalisiert werden, bevor sie in der Beleuchtungsberechnung verwendet wird.
 - Anschließend wird diese Weltraum-Normale wie gewohnt im Fragment-Shader weiterverwendet. Bei aktiviertem Phong-Shading, wo die Berechnung pro Fragment durchgeführt wird, zeigt sich die Veränderung deutlich: Anstelle der bisherigen (flachen) Normale wird jetzt der aus der Normalmap ausgelesene Normalenvektor verwendet, wodurch die Wand Unebenheiten aufweist und Licht sowie Schatten realistischer auf der Oberfläche verteilt werden.
 
@@ -141,10 +141,10 @@ Fragment-Shader:
   caption: [Visualisierung der Normalmap auf der unitplane. Die aus der Normalmap ausgelesenen Normalen verändern die Beleuchtungsberechnung, wodurch die eigentlich flache Oberfläche Unebenheiten aufweist.],
 )
 
-=== Fragen 1.)
+=== Frage 1.:
 Liesse sich die Beleuchtungsberechnung auch im Tangentspace durchführen?
 
-=== Lösung
+-> *Lösung*:
 - Ja: Indem man Lichtposition und Kameraposition mittels der transponierten TBN-Matrix in den Tangentspace transformiert, kann man die komplette Lichtberechnung dort durchführen, ohne die aus der Normalmap gelesenen Normalenvektoren in Weltkoordinaten transformieren zu müssen:
   - Variante 1 (in Weltkoordinaten):
     - Normalenvektoren aus der Normalmap in Weltkoordinaten transformieren (TBN-Matrix)
@@ -155,12 +155,12 @@ Liesse sich die Beleuchtungsberechnung auch im Tangentspace durchführen?
     - Das kann einmal pro Vertex durchgeführt werden und dann vom Rasterizer interpoliert werden
     - Lichtberechnung in Tangent Space durchführen
 
-=== Fragen 2.)
+=== Frage 2.:
 Ist es nötig sowohl Tangent- als auch Bitangentvektoren in den Shader
 zu laden, oder reicht es einen von beiden mitzuliefern? Begründen Sie
 Ihre Antwort.
 
-=== Lösung
+-> *Lösung*:
 - Es könnte theoretisch nur der Tangentvektor geladen werden, da der Bitangentvektor über das Kreuzprodukt aus Tangent- und Normalenvektor berechnet werden kann. Allerdings kann es bei den UV-Koordinaten symmetrischer Objekte (gespiegelte Texturkoordinaten) zu einem Wechsel zwischen Rechts- und Linkssystem kommen, wodurch das Kreuzprodukt in die falsche Richtung zeigen würde. Daher ist es sicherer, beide Vektoren direkt zu laden. Noch speichereffizienter wäre es, zusätzlich zum Tangentvektor nur ein einzelnes Vorzeichen-Bit zu laden, das angibt, ob ein Rechts- oder Linkssystem vorliegt, und den Bitangentvektor dann im Shader über das (vorzeichenkorrigierte) Kreuzprodukt zu berechnen.
 
 #line(length: 100%)

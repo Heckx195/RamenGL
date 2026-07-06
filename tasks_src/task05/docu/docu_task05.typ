@@ -39,10 +39,10 @@ Erzeugen Sie nun eine neue OpenGL Textur (`glCreateTextures`). Diesmal handelt e
 
 - Abschließend werden mit `glTextureParameteri` die Texturparameter für die Cubemap-Textur gesetzt, um ein gewünschtes Verhalten beim Sampling der Textur zu bestimmen. 
 
-=== Frage 1.):
+=== Frage 1.:
 Spielt die Reihenfolge, mit der Sie die einzelnen Bilder hochladen, eine Rolle?
 
-=== Lösung
+-> *Lösung*:
 - Die Reihenfolge beim Hochladen der sechs Bilder spielt in dem Sinne nur eine Rolle, dass sie zum richtigen Enum zugeordnet werden müssen
  - i=0 -> GL_TEXTURE_CUBE_MAP_POSITIVE_X
  - i=1 -> GL_TEXTURE_CUBE_MAP_NEGATIVE_X
@@ -133,10 +133,10 @@ Sie können die Cubemap dafür nutzen, um (perfekte) Reflexionen an einem Modell
 
 - Für das Umgebungsmapping wird ein neuer Shader geschrieben, der zusätzlich Zugriff auf die Cubemap-Textur hat, um die mithilfe des berechneten Reflektionsvektors die entsprechende Farbe von der Cubemap zu samplen.
 
-==== Vertexshader
+*Vertex-Shader*:
 - Im Vertexshader werden die Vertex-Positionen und Normalenvektoren vom Objektkoordinatensystem in das Weltkoordinatensystem transformiert (`u_ModelMat`) und an den Fragmentshader übergeben.
 
-==== Fragmentshader
+*Fragment-Shader*:
 - Im Fragmentshader werden zusätzlich die Weltkoordinaten der Kamera über eine Uniform (`u_CameraPos`) übergeben.
 - `I` ist der Richtungsvektor von der Kamera zum Fragment des Objekts, worauf die Reflektion abgebildet werden soll. Den Richtungsvektor (einfallender Strahl vom Auge) wird durch die Subtraktion der Weltkoordinaten der Kamera von den Weltkoordinaten des Fragments berechnet.
 - `N` ist der Normalenvektor am Fragment, der ebenfalls in Weltkoordinaten vorliegen muss.
