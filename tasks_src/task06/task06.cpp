@@ -231,7 +231,8 @@ static uint16_t quadIndices[ NUM_QUAD_INDICES ]   = { 0, 1, 3, 3, 2, 0 };
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    // Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "assets"); // for shipit
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("Task 06 - Shadow-Mapping", 800, 600);

@@ -115,7 +115,8 @@ std::vector<Vertex> CreateSphere(const Vec3f& color, int stacks = 16, int slices
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    // Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "assets"); // for shipit
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("Model loading", 800, 600);

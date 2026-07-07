@@ -206,8 +206,7 @@ struct ComputeShaderVertex
 
 int main(int argc, char** argv)
 {
-    // Filesystem* pFS = Filesystem::Init(argc, argv);
-    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "assets");
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("Computeshader", 800, 600);

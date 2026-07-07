@@ -190,7 +190,8 @@ void loadCubemap(
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    // Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "assets"); // for shipit
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("Task 05 - Cubemapping", 800, 600);
@@ -283,7 +284,7 @@ int main(int argc, char** argv)
 
     // TODO: Aufgabe 5.1.1
     GLuint textureHandleCubemap;
-    std::string prefix = "textures/cubemaps/mountains_prof/"; // Colosseum
+    std::string prefix = "textures/cubemaps/Colosseum/"; // mountains_vl not available in shipit
     loadCubemap(
         textureHandleCubemap,
         std::vector<std::string>{

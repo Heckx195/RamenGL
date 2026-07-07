@@ -286,7 +286,8 @@ std::vector<Vertex> CreateRotationAxis(float scale = 1.5f) {
 
 int main(int argc, char** argv)
 {
-    Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    // Filesystem* pFS = Filesystem::Init(argc, argv, "../../assets");
+    Filesystem* pFS = Filesystem::Init(argc, argv, "assets"); // for shipit
 
     Ramen* pRamen = Ramen::Instance();
     pRamen->Init("GUI", 800, 600);
